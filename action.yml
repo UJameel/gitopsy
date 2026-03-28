@@ -33,7 +33,15 @@ runs:
   steps:
     - name: Install gitopsy
       shell: bash
-      run: pip install gitopsy
+      run: |
+        # If running from local source (pyproject.toml present in action dir), install from source.
+        # Otherwise install from PyPI (used by external repos via UJameel/gitopsy@v1).
+        ACTION_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        if [ -f "$ACTION_DIR/pyproject.toml" ]; then
+          pip install -e "$ACTION_DIR"
+        else
+          pip install gitopsy
+        fi
 
     - name: Analyze repository
       id: analyze
