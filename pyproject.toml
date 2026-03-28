@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gitopsy"
-version = "0.1.0"
+version = "0.1.1"
 description = "Dissect any codebase in seconds"
 readme = "README.md"
 license = {text = "MIT"}
@@ -20,6 +20,13 @@ gitopsy = "gitopsy.cli:main"
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0", "pytest-cov>=4.0"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["gitopsy*"]
+
+[tool.setuptools.package-data]
+"gitopsy.report" = ["*.html"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
