@@ -3,6 +3,7 @@
 [![Gitopsy](https://img.shields.io/badge/gitopsy-A-44cc11)](https://github.com/UJameel/gitopsy)
 [![PyPI](https://img.shields.io/pypi/v/gitopsy)](https://pypi.org/project/gitopsy/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-☕-yellow)](https://buymeacoffee.com/ujameel)
 
 > One command. Instant codebase intelligence.
 
@@ -134,6 +135,12 @@ pytest
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add new analyzers.
+
+## Support
+
+If Gitopsy saves you time, consider buying me a coffee ☕
+
+[![Buy Me a Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://buymeacoffee.com/ujameel)
 
 ## License
 
