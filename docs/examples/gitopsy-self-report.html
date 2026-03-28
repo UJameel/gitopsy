@@ -1,0 +1,2712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gitopsy Report — Gitopsy</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    /* ===== CSS Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --orange: #f0883e;
+      --red: #f85149;
+      --purple: #bc8cff;
+      --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    code, pre {
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
+    pre {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 16px;
+      overflow-x: auto;
+      position: relative;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 11px;
+      padding: 3px 8px;
+    }
+    .copy-btn:hover { color: var(--text); }
+
+    /* ===== Layout ===== */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .header-left h1 {
+      font-family: var(--mono);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .header-left .subtitle {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 3px 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .grade-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      font-family: var(--mono);
+      font-size: 22px;
+      font-weight: 700;
+      border: 3px solid;
+    }
+
+    .grade-A { color: var(--green); border-color: var(--green); }
+    .grade-B { color: #56d364; border-color: #56d364; }
+    .grade-C { color: var(--yellow); border-color: var(--yellow); }
+    .grade-D { color: var(--orange); border-color: var(--orange); }
+    .grade-F { color: var(--red); border-color: var(--red); }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px 48px; }
+
+    /* ===== Score Dashboard ===== */
+    .score-dashboard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin: 24px 0 0;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .score-overall {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 80px;
+    }
+
+    .score-overall-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      font-family: var(--mono);
+      font-size: 28px;
+      font-weight: 700;
+      border: 3px solid;
+    }
+
+    .score-overall-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .score-divider {
+      width: 1px;
+      height: 60px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    .score-mini-grid {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+
+    .score-mini {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 60px;
+    }
+
+    .score-mini-circle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      border: 2px solid;
+    }
+
+    .score-mini-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* ===== Tabs ===== */
+    .tabs {
+      display: flex;
+      gap: 2px;
+      border-bottom: 1px solid var(--border);
+      margin: 24px 0 0;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: var(--sans);
+      font-size: 14px;
+      padding: 10px 16px;
+      transition: color 0.15s;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active {
+      color: var(--text);
+      border-bottom-color: var(--accent);
+    }
+
+    .tab-panel { display: none; padding: 24px 0; }
+    .tab-panel.active { display: block; }
+
+    /* ===== Section headers ===== */
+    .section { margin-bottom: 32px; }
+    .section-title {
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    /* ===== Tables ===== */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      background: var(--surface2);
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface2); }
+
+    /* Search bar */
+    .search-bar {
+      width: 100%;
+      max-width: 400px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 13px;
+      padding: 7px 12px;
+      margin-bottom: 12px;
+      outline: none;
+    }
+    .search-bar:focus { border-color: var(--accent); }
+
+    /* ===== Cards ===== */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    /* ===== Score bar ===== */
+    .score-bar-wrap { margin: 6px 0; }
+    .score-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 3px;
+    }
+    .score-bar-track {
+      background: var(--surface2);
+      border-radius: 3px;
+      height: 6px;
+      overflow: hidden;
+    }
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    /* ===== Pills / Badges ===== */
+    .pill {
+      display: inline-block;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+    }
+    .pill-green  { background: rgba(63,185,80,.15);  color: var(--green); }
+    .pill-yellow { background: rgba(210,153,34,.15); color: var(--yellow); }
+    .pill-orange { background: rgba(240,136,62,.15); color: var(--orange); }
+    .pill-red    { background: rgba(248,81,73,.15);  color: var(--red); }
+    .pill-blue   { background: rgba(88,166,255,.15); color: var(--accent); }
+    .pill-purple { background: rgba(188,140,255,.15);color: var(--purple); }
+    .pill-gray   { background: rgba(139,148,158,.15);color: var(--text-muted); }
+
+    /* Risk banners */
+    .risk-banner {
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .risk-critical { background: rgba(248,81,73,.15);  border: 1px solid var(--red);    color: var(--red); }
+    .risk-high     { background: rgba(240,136,62,.15); border: 1px solid var(--orange); color: var(--orange); }
+    .risk-medium   { background: rgba(210,153,34,.15); border: 1px solid var(--yellow); color: var(--yellow); }
+    .risk-low      { background: rgba(63,185,80,.15);  border: 1px solid var(--green);  color: var(--green); }
+
+    /* Method badges */
+    .method-GET    { background: rgba(88,166,255,.15);  color: var(--accent);  border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+    .method-POST   { background: rgba(63,185,80,.15);   color: var(--green);   border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+    .method-PUT    { background: rgba(210,153,34,.15);  color: var(--yellow);  border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+    .method-DELETE { background: rgba(248,81,73,.15);   color: var(--red);     border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+    .method-PATCH  { background: rgba(188,140,255,.15); color: var(--purple);  border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+
+    /* Status badges */
+    .status-ok      { background: rgba(63,185,80,.15);  color: var(--green);       border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
+    .status-outdated{ background: rgba(248,81,73,.15);  color: var(--red);         border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
+    .status-unknown { background: rgba(139,148,158,.15);color: var(--text-muted);  border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
+
+    /* Severity badges */
+    .sev-critical { background: rgba(248,81,73,.15);   color: var(--red);       border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
+    .sev-high     { background: rgba(240,136,62,.15);  color: var(--orange);    border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
+    .sev-medium   { background: rgba(210,153,34,.15);  color: var(--yellow);    border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
+    .sev-low      { background: rgba(88,166,255,.15);  color: var(--accent);    border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
+
+    /* ===== Details / collapsible ===== */
+    details {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    summary {
+      cursor: pointer;
+      padding: 10px 14px;
+      font-weight: 600;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::before {
+      content: '▶';
+      font-size: 10px;
+      color: var(--text-muted);
+      transition: transform 0.15s;
+    }
+    details[open] > summary::before { transform: rotate(90deg); }
+    .details-content { padding: 0 14px 14px; }
+
+    /* ===== File tree ===== */
+    .file-tree {
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.8;
+    }
+    .file-tree ul { list-style: none; padding-left: 16px; }
+    .file-tree li { color: var(--text-muted); }
+    .file-tree li.dir { color: var(--accent); font-weight: 600; }
+
+    /* ===== Hotspot table score ===== */
+    .score-num {
+      font-family: var(--mono);
+      font-weight: 700;
+    }
+
+    /* ===== Step list ===== */
+    .step-list { list-style: none; counter-reset: step; }
+    .step-list li {
+      counter-increment: step;
+      display: flex;
+      gap: 14px;
+      margin-bottom: 16px;
+      align-items: flex-start;
+    }
+    .step-list li::before {
+      content: counter(step);
+      background: var(--accent);
+      color: var(--bg);
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 12px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .step-content { flex: 1; }
+    .step-desc { margin-bottom: 6px; }
+
+    /* ===== Charts ===== */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 700px) {
+      .charts-row { grid-template-columns: 1fr; }
+    }
+    .chart-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      max-height: 320px;
+    }
+
+    /* ===== Gotcha list ===== */
+    .gotcha-list { list-style: none; }
+    .gotcha-list li {
+      display: flex;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .gotcha-list li:last-child { border-bottom: none; }
+    .gotcha-icon { color: var(--yellow); font-size: 16px; flex-shrink: 0; }
+
+    /* ===== Recommendations ===== */
+    .rec-list { list-style: none; }
+    .rec-list li {
+      display: flex;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    .rec-icon { color: var(--accent); flex-shrink: 0; }
+
+    /* ===== Prereq list ===== */
+    .prereq-list { list-style: none; }
+    .prereq-list li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .prereq-list li:last-child { border-bottom: none; }
+
+    /* ===== Empty state ===== */
+    .empty {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 16px 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== Header ===== -->
+<header class="header">
+  <div class="header-left">
+    <h1>gitopsy / Gitopsy</h1>
+    <div class="subtitle">
+      Generated 2026-03-28 15:51:50 UTC
+       · commit affc041
+    </div>
+  </div>
+  <div class="header-right">
+    
+    <div class="grade-badge grade-A">A</div>
+    
+    
+    <div class="badge">74 files</div>
+    <div class="badge">26,448 lines</div>
+    
+    <div class="badge">flask</div>
+    
+    
+  </div>
+</header>
+
+<!-- ===== Main ===== -->
+<div class="container">
+
+  <!-- ===== Score Dashboard ===== -->
+  
+  
+  <div class="score-dashboard">
+    <div class="score-overall">
+      <div class="score-overall-badge grade-C" style="border-color:currentColor">
+        C
+      </div>
+      <div class="score-overall-label">Overall<br>Health</div>
+    </div>
+    <div class="score-divider"></div>
+    <div class="score-mini-grid">
+      
+      <div class="score-mini">
+        <div class="score-mini-circle grade-A" style="border-color:#3fb950;color:#3fb950">
+          A
+        </div>
+        <div class="score-mini-label">Tech Debt</div>
+      </div>
+      
+      <div class="score-mini">
+        <div class="score-mini-circle grade-B" style="border-color:#3fb950;color:#3fb950">
+          B
+        </div>
+        <div class="score-mini-label">Architecture</div>
+      </div>
+      
+      <div class="score-mini">
+        <div class="score-mini-circle grade-A" style="border-color:#3fb950;color:#3fb950">
+          A
+        </div>
+        <div class="score-mini-label">Dependencies</div>
+      </div>
+      
+      <div class="score-mini">
+        <div class="score-mini-circle grade-B" style="border-color:#3fb950;color:#3fb950">
+          B
+        </div>
+        <div class="score-mini-label">Conventions</div>
+      </div>
+      
+      <div class="score-mini">
+        <div class="score-mini-circle grade-A" style="border-color:#3fb950;color:#3fb950">
+          A
+        </div>
+        <div class="score-mini-label">API</div>
+      </div>
+      
+      <div class="score-mini">
+        <div class="score-mini-circle grade-F" style="border-color:#f85149;color:#f85149">
+          F
+        </div>
+        <div class="score-mini-label">Security</div>
+      </div>
+      
+      <div class="score-mini">
+        <div class="score-mini-circle grade-B" style="border-color:#3fb950;color:#3fb950">
+          B
+        </div>
+        <div class="score-mini-label">Onboarding</div>
+      </div>
+      
+      <div class="score-mini">
+        <div class="score-mini-circle grade-B" style="border-color:#3fb950;color:#3fb950">
+          B
+        </div>
+        <div class="score-mini-label">Setup</div>
+      </div>
+      
+    </div>
+  </div>
+  
+
+  <nav class="tabs">
+    <button class="tab-btn active" onclick="showTab('architecture', this)">Architecture</button>
+    <button class="tab-btn" onclick="showTab('tech-debt', this)">Tech Debt</button>
+    <button class="tab-btn" onclick="showTab('onboarding', this)">Onboarding</button>
+    <button class="tab-btn" onclick="showTab('dependencies', this)">Dependencies</button>
+    <button class="tab-btn" onclick="showTab('conventions', this)">Conventions</button>
+    <button class="tab-btn" onclick="showTab('apis', this)">APIs</button>
+    <button class="tab-btn" onclick="showTab('security', this)">Security</button>
+    <button class="tab-btn" onclick="showTab('setup', this)">Setup</button>
+  </nav>
+
+  <!-- =============================== ARCHITECTURE TAB =============================== -->
+  <div id="tab-architecture" class="tab-panel active">
+
+    
+    
+
+    <!-- Overview cards -->
+    <div class="section">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">Project Type</div>
+          <span class="pill pill-blue">monolith</span>
+          
+          <span class="pill pill-purple" style="margin-left:6px">flask</span>
+          
+        </div>
+        <div class="card">
+          <div class="card-title">Structure Pattern</div>
+          <span class="pill pill-green">feature-based</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Codebase Size</div>
+          <div style="font-size:22px;font-weight:700;font-family:var(--mono)">74</div>
+          <div style="color:var(--text-muted);font-size:12px">files · 26,448 lines</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Language breakdown + chart -->
+    <div class="section">
+      <div class="section-title">Language Breakdown</div>
+      <div style="display:grid;grid-template-columns:1fr 280px;gap:24px;align-items:start">
+        <div>
+          
+          <div class="score-bar-wrap">
+            <div class="score-bar-label">
+              <span>Python</span>
+              <span>72.6%</span>
+            </div>
+            <div class="score-bar-track">
+              <div class="score-bar-fill" style="width:72.58%;background:var(--accent)"></div>
+            </div>
+          </div>
+          
+          <div class="score-bar-wrap">
+            <div class="score-bar-label">
+              <span>Markdown</span>
+              <span>11.3%</span>
+            </div>
+            <div class="score-bar-track">
+              <div class="score-bar-fill" style="width:11.29%;background:var(--accent)"></div>
+            </div>
+          </div>
+          
+          <div class="score-bar-wrap">
+            <div class="score-bar-label">
+              <span>HTML</span>
+              <span>4.8%</span>
+            </div>
+            <div class="score-bar-track">
+              <div class="score-bar-fill" style="width:4.84%;background:var(--accent)"></div>
+            </div>
+          </div>
+          
+          <div class="score-bar-wrap">
+            <div class="score-bar-label">
+              <span>JavaScript</span>
+              <span>4.8%</span>
+            </div>
+            <div class="score-bar-track">
+              <div class="score-bar-fill" style="width:4.84%;background:var(--accent)"></div>
+            </div>
+          </div>
+          
+          <div class="score-bar-wrap">
+            <div class="score-bar-label">
+              <span>TOML</span>
+              <span>3.2%</span>
+            </div>
+            <div class="score-bar-track">
+              <div class="score-bar-fill" style="width:3.23%;background:var(--accent)"></div>
+            </div>
+          </div>
+          
+          <div class="score-bar-wrap">
+            <div class="score-bar-label">
+              <span>YAML</span>
+              <span>1.6%</span>
+            </div>
+            <div class="score-bar-track">
+              <div class="score-bar-fill" style="width:1.61%;background:var(--accent)"></div>
+            </div>
+          </div>
+          
+          <div class="score-bar-wrap">
+            <div class="score-bar-label">
+              <span>JSON</span>
+              <span>1.6%</span>
+            </div>
+            <div class="score-bar-track">
+              <div class="score-bar-fill" style="width:1.61%;background:var(--accent)"></div>
+            </div>
+          </div>
+          
+          
+        </div>
+        <div class="chart-box" style="max-height:280px">
+          <canvas id="langChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Entry points -->
+    
+    <div class="section">
+      <div class="section-title">Entry Points</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>File</th><th>Type</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td><code>gitopsy/cli.py</code></td>
+              <td><span class="pill pill-blue">cli</span></td>
+            </tr>
+            
+            <tr>
+              <td><code>gitopsy/__main__.py</code></td>
+              <td><span class="pill pill-blue">cli</span></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/fixtures/nextjs-app/pages/index.js</code></td>
+              <td><span class="pill pill-blue">web</span></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/fixtures/flask-app/app.py</code></td>
+              <td><span class="pill pill-blue">web</span></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/fixtures/python-cli/cli.py</code></td>
+              <td><span class="pill pill-blue">cli</span></td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    <!-- Key files -->
+    
+    <div class="section">
+      <div class="section-title">Key Files</div>
+      <input class="search-bar" type="text" placeholder="Filter key files..." oninput="filterTable(this, 'key-files-table')">
+      <div class="table-wrap">
+        <table id="key-files-table">
+          <thead><tr><th>File</th><th>Role</th><th>Importance</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td><code>gitopsy/cli.py</code></td>
+              <td>entry point</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:50%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">50</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>gitopsy/__main__.py</code></td>
+              <td>entry point</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:50%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">50</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/fixtures/nextjs-app/pages/index.js</code></td>
+              <td>entry point</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:50%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">50</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/fixtures/flask-app/app.py</code></td>
+              <td>entry point</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:50%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">50</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/fixtures/python-cli/cli.py</code></td>
+              <td>entry point</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:50%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">50</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>pyproject.toml</code></td>
+              <td>package config</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:10%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">10</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>README.md</code></td>
+              <td>documentation</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:10%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">10</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/fixtures/nextjs-app/README.md</code></td>
+              <td>documentation</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:10%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">10</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/fixtures/nextjs-app/package.json</code></td>
+              <td>package config</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:10%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">10</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/fixtures/flask-app/README.md</code></td>
+              <td>documentation</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:10%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">10</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/fixtures/python-cli/pyproject.toml</code></td>
+              <td>package config</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:10%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">10</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/fixtures/python-cli/README.md</code></td>
+              <td>documentation</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:10%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">10</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>gitopsy.md</code></td>
+              <td>module</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:0%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">0</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>LICENSE</code></td>
+              <td>module</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:0%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">0</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>.gitignore</code></td>
+              <td>module</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:0%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">0</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>CONTRIBUTING.md</code></td>
+              <td>module</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:0%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">0</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>action.yml</code></td>
+              <td>module</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:0%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">0</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>gitopsy.egg-info/PKG-INFO</code></td>
+              <td>module</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:0%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">0</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>gitopsy.egg-info/SOURCES.txt</code></td>
+              <td>module</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:0%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">0</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>gitopsy.egg-info/entry_points.txt</code></td>
+              <td>module</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:0%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">0</span>
+              </td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    <!-- Layers -->
+    
+    <div class="section">
+      <div class="section-title">Detected Layers</div>
+      
+      <details>
+        <summary>
+          <span class="pill pill-purple">tests</span>
+          <span style="color:var(--text-muted);font-size:12px;font-weight:400">Test suite · 32 files</span>
+        </summary>
+        <div class="details-content">
+          <div class="file-tree">
+            <ul>
+              
+              <li><code>tests/test_setup_guide.py</code></li>
+              
+              <li><code>tests/test_security.py</code></li>
+              
+              <li><code>tests/conftest.py</code></li>
+              
+              <li><code>tests/test_dependencies.py</code></li>
+              
+              <li><code>tests/test_git_history.py</code></li>
+              
+              <li><code>tests/__init__.py</code></li>
+              
+              <li><code>tests/test_api_extractor.py</code></li>
+              
+              <li><code>tests/test_architecture.py</code></li>
+              
+              <li><code>tests/test_language_detect.py</code></li>
+              
+              <li><code>tests/test_diff.py</code></li>
+              
+              <li><code>tests/test_file_tree.py</code></li>
+              
+              <li><code>tests/test_onboarding.py</code></li>
+              
+              <li><code>tests/test_tech_debt.py</code></li>
+              
+              <li><code>tests/test_integration.py</code></li>
+              
+              <li><code>tests/test_conventions.py</code></li>
+              
+              <li><code>tests/test_pattern_match.py</code></li>
+              
+              <li><code>tests/test_badge.py</code></li>
+              
+              <li><code>tests/fixtures/nextjs-app/README.md</code></li>
+              
+              <li><code>tests/fixtures/nextjs-app/package.json</code></li>
+              
+              <li><code>tests/fixtures/nextjs-app/pages/index.js</code></li>
+              
+              <li><code>tests/fixtures/nextjs-app/pages/api/products.js</code></li>
+              
+              <li><code>tests/fixtures/nextjs-app/pages/api/users.js</code></li>
+              
+              <li><code>tests/fixtures/flask-app/requirements.txt</code></li>
+              
+              <li><code>tests/fixtures/flask-app/README.md</code></li>
+              
+              <li><code>tests/fixtures/flask-app/.gitignore</code></li>
+              
+              <li><code>tests/fixtures/flask-app/app.py</code></li>
+              
+              <li><code>tests/fixtures/flask-app/.env.example</code></li>
+              
+              <li><code>tests/fixtures/flask-app/tests/test_app.py</code></li>
+              
+              <li><code>tests/fixtures/python-cli/pyproject.toml</code></li>
+              
+              <li><code>tests/fixtures/python-cli/README.md</code></li>
+              
+              <li><code>tests/fixtures/python-cli/cli.py</code></li>
+              
+              <li><code>tests/fixtures/python-cli/.gitignore</code></li>
+              
+            </ul>
+          </div>
+        </div>
+      </details>
+      
+      <details>
+        <summary>
+          <span class="pill pill-purple">docs</span>
+          <span style="color:var(--text-muted);font-size:12px;font-weight:400">Documentation · 3 files</span>
+        </summary>
+        <div class="details-content">
+          <div class="file-tree">
+            <ul>
+              
+              <li><code>docs/CONTRIBUTING.md</code></li>
+              
+              <li><code>docs/examples/gitopsy-report-fastapi.html</code></li>
+              
+              <li><code>docs/examples/gitopsy-report-flask.html</code></li>
+              
+            </ul>
+          </div>
+        </div>
+      </details>
+      
+    </div>
+    
+
+    <!-- Internal deps -->
+    
+
+    
+  </div>
+
+  <!-- =============================== TECH DEBT TAB =============================== -->
+  <div id="tab-tech-debt" class="tab-panel">
+
+    
+    
+
+    <!-- Score header -->
+    <div class="section">
+      <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+        <div class="grade-badge grade-A" style="width:80px;height:80px;font-size:36px">A</div>
+        <div>
+          <div style="font-size:32px;font-weight:700;font-family:var(--mono)">3<span style="font-size:16px;color:var(--text-muted)">/100</span></div>
+          <div style="color:var(--text-muted)">Overall Tech Debt Score — lower is better</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="charts-row">
+      <div class="chart-box">
+        <canvas id="debtChart"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">Dimension Scores</div>
+        
+        <div class="score-bar-wrap">
+          <div class="score-bar-label">
+            <span>Todo Density</span>
+            <span class="score-num">14</span>
+          </div>
+          <div class="score-bar-track">
+            <div class="score-bar-fill" style="width:14%;background:var(--green)"></div>
+          </div>
+        </div>
+        
+        <div class="score-bar-wrap">
+          <div class="score-bar-label">
+            <span>Code Staleness</span>
+            <span class="score-num">0</span>
+          </div>
+          <div class="score-bar-track">
+            <div class="score-bar-fill" style="width:0%;background:var(--green)"></div>
+          </div>
+        </div>
+        
+        <div class="score-bar-wrap">
+          <div class="score-bar-label">
+            <span>Test Coverage</span>
+            <span class="score-num">0</span>
+          </div>
+          <div class="score-bar-track">
+            <div class="score-bar-fill" style="width:0%;background:var(--green)"></div>
+          </div>
+        </div>
+        
+        <div class="score-bar-wrap">
+          <div class="score-bar-label">
+            <span>Complexity</span>
+            <span class="score-num">4</span>
+          </div>
+          <div class="score-bar-track">
+            <div class="score-bar-fill" style="width:4%;background:var(--green)"></div>
+          </div>
+        </div>
+        
+        <div class="score-bar-wrap">
+          <div class="score-bar-label">
+            <span>Dependency Freshness</span>
+            <span class="score-num">0</span>
+          </div>
+          <div class="score-bar-track">
+            <div class="score-bar-fill" style="width:0%;background:var(--green)"></div>
+          </div>
+        </div>
+        
+        <div class="score-bar-wrap">
+          <div class="score-bar-label">
+            <span>Documentation</span>
+            <span class="score-num">2</span>
+          </div>
+          <div class="score-bar-track">
+            <div class="score-bar-fill" style="width:2%;background:var(--green)"></div>
+          </div>
+        </div>
+        
+        <div class="score-bar-wrap">
+          <div class="score-bar-label">
+            <span>Dead Code</span>
+            <span class="score-num">2</span>
+          </div>
+          <div class="score-bar-track">
+            <div class="score-bar-fill" style="width:2%;background:var(--green)"></div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+
+    <!-- Dimension details table -->
+    <div class="section">
+      <div class="section-title">Dimension Details</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Dimension</th><th>Score</th><th>Weight</th><th>Detail</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td><strong>Todo Density</strong></td>
+              <td>
+                <span class="score-num " style="color:var(--green)">14</span>
+              </td>
+              <td style="color:var(--text-muted)">15%</td>
+              <td style="color:var(--text-muted);font-size:12px">10 TODO/FIXME/HACK comments across 6903 lines (1.4 per 1000 lines)</td>
+            </tr>
+            
+            <tr>
+              <td><strong>Code Staleness</strong></td>
+              <td>
+                <span class="score-num " style="color:var(--green)">0</span>
+              </td>
+              <td style="color:var(--text-muted)">10%</td>
+              <td style="color:var(--text-muted);font-size:12px">Code staleness analysis requires git history (not available or not computed).</td>
+            </tr>
+            
+            <tr>
+              <td><strong>Test Coverage</strong></td>
+              <td>
+                <span class="score-num " style="color:var(--green)">0</span>
+              </td>
+              <td style="color:var(--text-muted)">20%</td>
+              <td style="color:var(--text-muted);font-size:12px">23 test files vs 25 source files (ratio: 0.92)</td>
+            </tr>
+            
+            <tr>
+              <td><strong>Complexity</strong></td>
+              <td>
+                <span class="score-num " style="color:var(--green)">4</span>
+              </td>
+              <td style="color:var(--text-muted)">20%</td>
+              <td style="color:var(--text-muted);font-size:12px">1 files exceed 500 lines.</td>
+            </tr>
+            
+            <tr>
+              <td><strong>Dependency Freshness</strong></td>
+              <td>
+                <span class="score-num " style="color:var(--green)">0</span>
+              </td>
+              <td style="color:var(--text-muted)">10%</td>
+              <td style="color:var(--text-muted);font-size:12px">Dependency freshness analysis requires network access to version registries. Run with --check-deps to enable.</td>
+            </tr>
+            
+            <tr>
+              <td><strong>Documentation</strong></td>
+              <td>
+                <span class="score-num " style="color:var(--green)">2</span>
+              </td>
+              <td style="color:var(--text-muted)">15%</td>
+              <td style="color:var(--text-muted);font-size:12px">1/45 Python files lack module docstrings (2%)</td>
+            </tr>
+            
+            <tr>
+              <td><strong>Dead Code</strong></td>
+              <td>
+                <span class="score-num " style="color:var(--green)">2</span>
+              </td>
+              <td style="color:var(--text-muted)">10%</td>
+              <td style="color:var(--text-muted);font-size:12px">23/45 Python files have no imports from internal modules.</td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Hotspots -->
+    
+    <div class="section">
+      <div class="section-title">Hotspots</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>File</th><th>Score</th><th>Reasons</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td><code>gitopsy/analyzers/setup_guide.py</code></td>
+              <td><span class="score-num" style="color:var(--red)">50</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">
+                File has 537 lines (threshold: 500)
+              </td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    <!-- Recommendations -->
+    
+
+    
+  </div>
+
+  <!-- =============================== ONBOARDING TAB =============================== -->
+  <div id="tab-onboarding" class="tab-panel">
+
+    
+    
+
+    <!-- Project summary -->
+    <div class="section">
+      <div class="section-title">What Is This Project?</div>
+      <div class="card">
+        <p>> *Dissect any codebase in seconds.*</p>
+      </div>
+      
+      <div class="card">
+        <div class="card-title">Architecture Overview</div>
+        <p style="color:var(--text-muted)">This is a monolith project using flask with a feature-based structure. Primary languages: Python (73%), Markdown (11%), HTML (5%). Entry points: gitopsy/cli.py (cli), gitopsy/__main__.py (cli), tests/fixtures/nextjs-app/pages/index.js (web). Layers detected: tests, docs.</p>
+      </div>
+      
+    </div>
+
+    <!-- Key files to read first -->
+    
+    <div class="section">
+      <div class="section-title">Key Files to Read First</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>File</th><th>Role</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td style="color:var(--text-muted)">1</td>
+              <td><code>gitopsy/cli.py</code></td>
+              <td>entry point</td>
+            </tr>
+            
+            <tr>
+              <td style="color:var(--text-muted)">2</td>
+              <td><code>gitopsy/__main__.py</code></td>
+              <td>entry point</td>
+            </tr>
+            
+            <tr>
+              <td style="color:var(--text-muted)">3</td>
+              <td><code>tests/fixtures/nextjs-app/pages/index.js</code></td>
+              <td>entry point</td>
+            </tr>
+            
+            <tr>
+              <td style="color:var(--text-muted)">4</td>
+              <td><code>tests/fixtures/flask-app/app.py</code></td>
+              <td>entry point</td>
+            </tr>
+            
+            <tr>
+              <td style="color:var(--text-muted)">5</td>
+              <td><code>tests/fixtures/python-cli/cli.py</code></td>
+              <td>entry point</td>
+            </tr>
+            
+            <tr>
+              <td style="color:var(--text-muted)">6</td>
+              <td><code>pyproject.toml</code></td>
+              <td>package config</td>
+            </tr>
+            
+            <tr>
+              <td style="color:var(--text-muted)">7</td>
+              <td><code>README.md</code></td>
+              <td>documentation</td>
+            </tr>
+            
+            <tr>
+              <td style="color:var(--text-muted)">8</td>
+              <td><code>tests/fixtures/nextjs-app/README.md</code></td>
+              <td>documentation</td>
+            </tr>
+            
+            <tr>
+              <td style="color:var(--text-muted)">9</td>
+              <td><code>tests/fixtures/nextjs-app/package.json</code></td>
+              <td>package config</td>
+            </tr>
+            
+            <tr>
+              <td style="color:var(--text-muted)">10</td>
+              <td><code>tests/fixtures/flask-app/README.md</code></td>
+              <td>documentation</td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    <!-- Setup steps -->
+    <div class="section">
+      <div class="section-title">How to Run Locally</div>
+      
+      <ol class="step-list">
+        
+        <li>
+          <div class="step-content">
+            <div class="step-desc">Run: pip install gitopsy</div>
+            
+            <pre><code>pip install gitopsy</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            
+          </div>
+        </li>
+        
+        <li>
+          <div class="step-content">
+            <div class="step-desc">Run: git clone https://github.com/gitopsy/gitopsy</div>
+            
+            <pre><code>git clone https://github.com/gitopsy/gitopsy</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            
+          </div>
+        </li>
+        
+        <li>
+          <div class="step-content">
+            <div class="step-desc">Run: cd gitopsy</div>
+            
+            <pre><code>cd gitopsy</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            
+          </div>
+        </li>
+        
+        <li>
+          <div class="step-content">
+            <div class="step-desc">Run: pip install -e ".[dev]"</div>
+            
+            <pre><code>pip install -e ".[dev]"</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            
+          </div>
+        </li>
+        
+        <li>
+          <div class="step-content">
+            <div class="step-desc">Run: # Analyze the current directory</div>
+            
+            <pre><code># Analyze the current directory</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            
+          </div>
+        </li>
+        
+        <li>
+          <div class="step-content">
+            <div class="step-desc">Run: gitopsy .</div>
+            
+            <pre><code>gitopsy .</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            
+          </div>
+        </li>
+        
+        <li>
+          <div class="step-content">
+            <div class="step-desc">Run: # Analyze any repository</div>
+            
+            <pre><code># Analyze any repository</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            
+          </div>
+        </li>
+        
+        <li>
+          <div class="step-content">
+            <div class="step-desc">Run: gitopsy /path/to/repo</div>
+            
+            <pre><code>gitopsy /path/to/repo</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            
+          </div>
+        </li>
+        
+        <li>
+          <div class="step-content">
+            <div class="step-desc">Run: # Custom output path</div>
+            
+            <pre><code># Custom output path</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            
+          </div>
+        </li>
+        
+        <li>
+          <div class="step-content">
+            <div class="step-desc">Run: gitopsy . --output report.html</div>
+            
+            <pre><code>gitopsy . --output report.html</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            
+          </div>
+        </li>
+        
+        <li>
+          <div class="step-content">
+            <div class="step-desc">Run: # Run specific analyzers only</div>
+            
+            <pre><code># Run specific analyzers only</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            
+          </div>
+        </li>
+        
+        <li>
+          <div class="step-content">
+            <div class="step-desc">Run: gitopsy . --analyzers arch,debt</div>
+            
+            <pre><code>gitopsy . --analyzers arch,debt</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            
+          </div>
+        </li>
+        
+        <li>
+          <div class="step-content">
+            <div class="step-desc">Run: # Output raw JSON (for piping or scripting)</div>
+            
+            <pre><code># Output raw JSON (for piping or scripting)</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            
+          </div>
+        </li>
+        
+        <li>
+          <div class="step-content">
+            <div class="step-desc">Run: gitopsy . --json</div>
+            
+            <pre><code>gitopsy . --json</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            
+          </div>
+        </li>
+        
+        <li>
+          <div class="step-content">
+            <div class="step-desc">Run: # Use as a Python module</div>
+            
+            <pre><code># Use as a Python module</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            
+          </div>
+        </li>
+        
+        <li>
+          <div class="step-content">
+            <div class="step-desc">Run: python -m gitopsy /path/to/repo</div>
+            
+            <pre><code>python -m gitopsy /path/to/repo</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            
+          </div>
+        </li>
+        
+      </ol>
+      
+    </div>
+
+    <!-- Test commands -->
+    
+    <div class="section">
+      <div class="section-title">How to Run Tests</div>
+      
+      <pre><code>pytest</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+      
+    </div>
+    
+
+    <!-- Contributors -->
+    
+    <div class="section">
+      <div class="section-title">Who to Ask</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Recent Commits</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td><strong>UJameel</strong></td>
+              <td style="color:var(--text-muted)">usman_jameel98@yahoo.com</td>
+              <td>5</td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    <!-- Gotchas -->
+    
+    <div class="section">
+      <div class="section-title">Gotchas</div>
+      <ul class="gotcha-list">
+        
+        <li>
+          <span class="gotcha-icon">⚠</span>
+          <span>No Makefile found — developers need to know manual setup steps.</span>
+        </li>
+        
+        <li>
+          <span class="gotcha-icon">⚠</span>
+          <span>No .nvmrc or .node-version found — Node.js version requirements are not pinned.</span>
+        </li>
+        
+      </ul>
+    </div>
+    
+
+    <!-- Glossary -->
+    
+
+    
+  </div>
+
+  <!-- =============================== DEPENDENCIES TAB =============================== -->
+  <div id="tab-dependencies" class="tab-panel">
+
+    
+    
+
+    <!-- Overview cards -->
+    <div class="section">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">Package Manager</div>
+          <span class="pill pill-blue">pip</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Total Dependencies</div>
+          <div style="font-size:28px;font-weight:700;font-family:var(--mono)">3</div>
+          <div style="color:var(--text-muted);font-size:12px">0 outdated</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Risk Score</div>
+          <div style="font-size:28px;font-weight:700;font-family:var(--mono);color:var(--green)">0<span style="font-size:14px;color:var(--text-muted)">/100</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- License conflicts -->
+    
+
+    <!-- Dependencies table -->
+    <div class="section">
+      <div class="section-title">All Dependencies</div>
+      <input class="search-bar" type="text" placeholder="Filter dependencies..." oninput="filterTable(this, 'deps-table')">
+      <div class="table-wrap">
+        <table id="deps-table">
+          <thead><tr><th>Name</th><th>Version</th><th>Latest</th><th>License</th><th>Status</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td><strong>click</strong></td>
+              <td><code>8.0</code></td>
+              <td style="color:var(--text-muted)">—</td>
+              <td style="color:var(--text-muted);font-size:12px">—</td>
+              <td>
+                <span class="status-ok">up-to-date</span>
+                
+              </td>
+            </tr>
+            
+            <tr>
+              <td><strong>pydantic</strong></td>
+              <td><code>2.0</code></td>
+              <td style="color:var(--text-muted)">—</td>
+              <td style="color:var(--text-muted);font-size:12px">—</td>
+              <td>
+                <span class="status-ok">up-to-date</span>
+                
+              </td>
+            </tr>
+            
+            <tr>
+              <td><strong>jinja2</strong></td>
+              <td><code>3.0</code></td>
+              <td style="color:var(--text-muted)">—</td>
+              <td style="color:var(--text-muted);font-size:12px">—</td>
+              <td>
+                <span class="status-ok">up-to-date</span>
+                
+              </td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    
+  </div>
+
+  <!-- =============================== CONVENTIONS TAB =============================== -->
+  <div id="tab-conventions" class="tab-panel">
+
+    
+    
+
+    <!-- Consistency score -->
+    <div class="section">
+      <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:48px;font-weight:700;font-family:var(--mono);color:var(--green)">
+            87<span style="font-size:18px;color:var(--text-muted)">/100</span>
+          </div>
+          <div style="color:var(--text-muted)">Consistency Score</div>
+        </div>
+        <div class="card-grid" style="flex:1;min-width:0">
+          <div class="card">
+            <div class="card-title">Import Style</div>
+            <span class="pill pill-blue">absolute</span>
+          </div>
+          <div class="card">
+            <div class="card-title">Error Handling</div>
+            <span class="pill pill-purple">try-catch</span>
+          </div>
+          <div class="card">
+            <div class="card-title">Test Pattern</div>
+            <span class="pill pill-green">separate-dir</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Naming conventions -->
+    <div class="section">
+      <div class="section-title">Naming Conventions</div>
+      <details open>
+        <summary>Detected Naming Patterns</summary>
+        <div class="details-content">
+          <div class="table-wrap" style="margin-top:12px">
+            <table>
+              <thead><tr><th>Category</th><th>Convention</th></tr></thead>
+              <tbody>
+                <tr><td>Variables</td><td><span class="pill pill-blue">mixed</span></td></tr>
+                <tr><td>Functions</td><td><span class="pill pill-blue">snake_case</span></td></tr>
+                <tr><td>Classes</td><td><span class="pill pill-purple">PascalCase</span></td></tr>
+                <tr><td>Files</td><td><span class="pill pill-green">snake_case</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- Formatting -->
+    <div class="section">
+      <div class="section-title">Formatting Rules</div>
+      <details open>
+        <summary>Detected Formatting</summary>
+        <div class="details-content">
+          <div class="table-wrap" style="margin-top:12px">
+            <table>
+              <thead><tr><th>Rule</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td>Indent Style</td><td><span class="pill pill-blue">spaces</span></td></tr>
+                <tr><td>Indent Width</td><td><code>4</code></td></tr>
+                <tr><td>Quotes</td><td><span class="pill pill-purple">single</span></td></tr>
+                <tr><td>Semicolons</td><td><span class="pill pill-orange">False</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- Git conventions -->
+    <div class="section">
+      <div class="section-title">Git Conventions</div>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">Commit Format</div>
+          <span class="pill pill-blue">conventional-commits</span>
+        </div>
+        
+        <div class="card">
+          <div class="card-title">Linter Config</div>
+          <code>pyproject.toml</code>
+        </div>
+        
+      </div>
+    </div>
+
+    
+  </div>
+
+  <!-- =============================== APIs TAB =============================== -->
+  <div id="tab-apis" class="tab-panel">
+
+    
+    
+
+    <!-- Overview -->
+    <div class="section">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">API Type</div>
+          <span class="pill pill-blue">mixed</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Total Routes</div>
+          <div style="font-size:28px;font-weight:700;font-family:var(--mono)">13</div>
+          <div style="color:var(--text-muted);font-size:12px">0 undocumented</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HTTP Endpoints -->
+    
+    <div class="section">
+      <div class="section-title">HTTP Endpoints</div>
+      <input class="search-bar" type="text" placeholder="Filter endpoints..." oninput="filterTable(this, 'endpoints-table')">
+      <div class="table-wrap">
+        <table id="endpoints-table">
+          <thead><tr><th>Method</th><th>Path</th><th>Handler</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/path</code></td>
+              <td style="color:var(--text-muted);font-size:12px">gitopsy/analyzers/api_extractor.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/path</code></td>
+              <td style="color:var(--text-muted);font-size:12px">gitopsy/analyzers/api_extractor.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/path</code></td>
+              <td style="color:var(--text-muted);font-size:12px">gitopsy/analyzers/api_extractor.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/health</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/fixtures/flask-app/app.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/users</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/fixtures/flask-app/app.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/users</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/fixtures/flask-app/app.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/users/<int:user_id></code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/fixtures/flask-app/app.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-PUT">PUT</span></td>
+              <td><code>/users/<int:user_id></code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/fixtures/flask-app/app.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-DELETE">DELETE</span></td>
+              <td><code>/users/<int:user_id></code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/fixtures/flask-app/app.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/search</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/fixtures/flask-app/app.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/items</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_api_extractor.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/items</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_api_extractor.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/items/{item_id}</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_api_extractor.py</td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    <!-- CLI Commands -->
+    
+    <div class="section">
+      <div class="section-title">CLI Commands</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Command</th><th>Description</th><th>Handler</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td><code>greet</code></td>
+              <td style="color:var(--text-muted)">Greet NAME count times.</td>
+              <td style="color:var(--text-muted);font-size:12px">tests/fixtures/python-cli/cli.py</td>
+            </tr>
+            
+            <tr>
+              <td><code>status</code></td>
+              <td style="color:var(--text-muted)">Show status information.</td>
+              <td style="color:var(--text-muted);font-size:12px">tests/fixtures/python-cli/cli.py</td>
+            </tr>
+            
+            <tr>
+              <td><code>process</code></td>
+              <td style="color:var(--text-muted)">Process INPUT_FILE and write to OUTPUT_FILE.</td>
+              <td style="color:var(--text-muted);font-size:12px">tests/fixtures/python-cli/cli.py</td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    
+  </div>
+
+  <!-- =============================== SECURITY TAB =============================== -->
+  <div id="tab-security" class="tab-panel">
+
+    
+    
+
+    <!-- Risk banner -->
+    <div class="risk-banner risk-critical">
+      <span style="font-size:18px">&#9888;</span>
+      <span>Risk Level: <strong>CRITICAL</strong>
+         · 55 secret(s) found
+      </span>
+    </div>
+
+    <!-- Overview cards -->
+    <div class="section">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">Auth Pattern</div>
+          <span class="pill pill-blue">oauth</span>
+        </div>
+        
+        <div class="card">
+          <div class="card-title">Findings</div>
+          <div style="font-size:28px;font-weight:700;font-family:var(--mono)">59</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Findings table -->
+    
+    <div class="section">
+      <div class="section-title">Security Findings</div>
+      <input class="search-bar" type="text" placeholder="Filter findings..." oninput="filterTable(this, 'findings-table')">
+      <div class="table-wrap">
+        <table id="findings-table">
+          <thead><tr><th>Severity</th><th>Category</th><th>File</th><th>Line</th><th>Description</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12011</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12019</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12027</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12035</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12043</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12051</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12059</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12067</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12075</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12083</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12091</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12099</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12107</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12115</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12123</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12131</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12139</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12147</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12155</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12163</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12171</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12179</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12187</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12195</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12283</td>
+              <td style="font-size:12px">Potential generic-password detected: password="test-password"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12291</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secrethashed"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12299</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secrethashed"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12307</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secrethashed"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12315</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secrethashed"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12323</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12331</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secretalice"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12339</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12347</td>
+              <td style="font-size:12px">Potential generic-password detected: password="secretalice"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12203</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12211</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12219</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12227</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-fastapi.html</td>
+              <td style="color:var(--text-muted)">12235</td>
+              <td style="font-size:12px">Potential secret-key detected: secret_key="supersecret"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-flask.html</td>
+              <td style="color:var(--text-muted)">4248</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY='192b9bdd22ab9ed4d12e236c78afcb9a393ec15f71bbf5dc</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-flask.html</td>
+              <td style="color:var(--text-muted)">4256</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY = '192b9bdd22ab9ed4d12e236c78afcb9a393ec15f71bbf5</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-flask.html</td>
+              <td style="color:var(--text-muted)">4264</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY="5f352379324c22463451387a0aec5d2f"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-flask.html</td>
+              <td style="color:var(--text-muted)">4272</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY="5f352379324c22463451387a0aec5d2f"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-flask.html</td>
+              <td style="color:var(--text-muted)">4280</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY = "5f352379324c22463451387a0aec5d2f"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-flask.html</td>
+              <td style="color:var(--text-muted)">4288</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY = '192b9bdd22ab9ed4d12e236c78afcb9a393ec15f71bbf5</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-flask.html</td>
+              <td style="color:var(--text-muted)">4296</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY = 'development key'</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-flask.html</td>
+              <td style="color:var(--text-muted)">4304</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY="test key"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-flask.html</td>
+              <td style="color:var(--text-muted)">4312</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY="config"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-flask.html</td>
+              <td style="color:var(--text-muted)">4320</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY = "config"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-flask.html</td>
+              <td style="color:var(--text-muted)">4328</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY="config"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-flask.html</td>
+              <td style="color:var(--text-muted)">4336</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY="config"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-flask.html</td>
+              <td style="color:var(--text-muted)">4344</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY = "config"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/examples/gitopsy-report-flask.html</td>
+              <td style="color:var(--text-muted)">4352</td>
+              <td style="font-size:12px">Potential secret-key detected: secret_key = "secret_key"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-medium">medium</span></td>
+              <td><code style="font-size:11px">sql-injection</code></td>
+              <td style="color:var(--text-muted);font-size:12px">gitopsy/analyzers/security_surface.py</td>
+              <td style="color:var(--text-muted)">44</td>
+              <td style="font-size:12px">Potential SQL injection via string formatting: WHERE name = '%s</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-medium">medium</span></td>
+              <td><code style="font-size:11px">sql-injection</code></td>
+              <td style="color:var(--text-muted);font-size:12px">gitopsy/analyzers/security_surface.py</td>
+              <td style="color:var(--text-muted)">44</td>
+              <td style="font-size:12px">Potential SQL injection via string formatting: "... WHERE name = '%s'" % v</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-critical">critical</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/fixtures/flask-app/app.py</td>
+              <td style="color:var(--text-muted)">41</td>
+              <td style="font-size:12px">Potential aws-key detected: AKIAIOSFODNN7EXAMPLE</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-medium">medium</span></td>
+              <td><code style="font-size:11px">sql-injection</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/fixtures/flask-app/app.py</td>
+              <td style="color:var(--text-muted)">44</td>
+              <td style="font-size:12px">Potential SQL injection via string formatting: SELECT * FROM users WHERE name = '%s</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-medium">medium</span></td>
+              <td><code style="font-size:11px">sql-injection</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/fixtures/flask-app/app.py</td>
+              <td style="color:var(--text-muted)">44</td>
+              <td style="font-size:12px">Potential SQL injection via string formatting: "SELECT * FROM users WHERE name = '%s'" % n</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-critical">critical</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_pattern_match.py</td>
+              <td style="color:var(--text-muted)">68</td>
+              <td style="font-size:12px">Potential aws-key detected: AKIAIOSFODNN7EXAMPLE</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_pattern_match.py</td>
+              <td style="color:var(--text-muted)">74</td>
+              <td style="font-size:12px">Potential generic-api-key detected: api_key = "sk-1234567890abcdef"</td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    <!-- Recommendations -->
+    
+    <div class="section">
+      <div class="section-title">Recommendations</div>
+      <ul class="rec-list">
+        
+        <li>
+          <span class="rec-icon">→</span>
+          <span>Move all secrets to environment variables or a secrets manager</span>
+        </li>
+        
+        <li>
+          <span class="rec-icon">→</span>
+          <span>Use parameterized queries or an ORM instead of string-formatted SQL</span>
+        </li>
+        
+      </ul>
+    </div>
+    
+
+    
+  </div>
+
+  <!-- =============================== SETUP TAB =============================== -->
+  <div id="tab-setup" class="tab-panel">
+
+    
+    
+
+    <!-- Prerequisites -->
+    
+    <div class="section">
+      <div class="section-title">Prerequisites</div>
+      <ul class="prereq-list">
+        
+        <li>
+          <span class="pill pill-blue">python</span>
+          <code style="font-size:12px">>=3.10</code>
+          <span style="font-size:12px;color:var(--text-muted)">https://python.org/downloads</span>
+        </li>
+        
+      </ul>
+    </div>
+    
+
+    <!-- Install steps -->
+    
+    <div class="section">
+      <div class="section-title">Installation</div>
+      <ol class="step-list">
+        
+        <li>
+          <div class="step-content">
+            <div class="step-desc">Install the package in development mode</div>
+            
+            <pre><code>pip install -e .</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            
+          </div>
+        </li>
+        
+      </ol>
+    </div>
+    
+
+    <!-- Environment variables -->
+    
+    <div class="section">
+      <div class="section-title">Environment Variables</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Required</th><th>Description</th><th>Example</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td><code>DATABASE_URL</code></td>
+              <td><span class="pill pill-gray">optional</span></td>
+              <td style="color:var(--text-muted);font-size:12px">—</td>
+              <td><code style="font-size:12px;color:var(--text-muted)">—</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>API_KEY</code></td>
+              <td><span class="pill pill-gray">optional</span></td>
+              <td style="color:var(--text-muted);font-size:12px">—</td>
+              <td><code style="font-size:12px;color:var(--text-muted)">—</code></td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    <!-- Run commands -->
+    
+    <div class="section">
+      <div class="section-title">Run Commands</div>
+      
+      <details>
+        <summary><span class="pill pill-green">python</span></summary>
+        <div class="details-content" style="padding-top:10px">
+          <pre><code># Use as a Python module</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+        </div>
+      </details>
+      
+    </div>
+    
+
+    <!-- Test command -->
+    
+    <div class="section">
+      <div class="section-title">Test Command</div>
+      <pre><code>pytest</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+    </div>
+    
+
+    <!-- Build command -->
+    
+
+    <!-- Database setup -->
+    
+
+    <!-- Common issues -->
+    
+    <div class="section">
+      <div class="section-title">Common Issues</div>
+      
+      <details>
+        <summary>ModuleNotFoundError when running the app</summary>
+        <div class="details-content" style="color:var(--text-muted);padding-top:8px">
+          Make sure you've activated your virtual environment and run `pip install -r requirements.txt`
+        </div>
+      </details>
+      
+    </div>
+    
+
+    
+  </div>
+
+</div><!-- /container -->
+
+<script>
+  // ===== Tab switching =====
+  function showTab(name, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // ===== Table filter =====
+  function filterTable(input, tableId) {
+    const filter = input.value.toLowerCase();
+    const rows = document.getElementById(tableId).querySelectorAll('tbody tr');
+    rows.forEach(row => {
+      row.style.display = row.textContent.toLowerCase().includes(filter) ? '' : 'none';
+    });
+  }
+
+  // ===== Copy to clipboard =====
+  function copyCode(btn) {
+    const code = btn.previousElementSibling.textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      btn.textContent = 'copied!';
+      setTimeout(() => { btn.textContent = 'copy'; }, 2000);
+    });
+  }
+
+  // ===== Charts =====
+  Chart.defaults.color = '#8b949e';
+  Chart.defaults.borderColor = '#30363d';
+
+  const langCfg = {"type": "doughnut", "data": {"labels": ["Python", "Markdown", "HTML", "JavaScript", "TOML", "YAML", "JSON"], "datasets": [{"data": [72.58, 11.29, 4.84, 4.84, 3.23, 1.61, 1.61], "backgroundColor": ["#58a6ff", "#3fb950", "#f85149", "#d29922", "#f0883e", "#bc8cff", "#79c0ff"], "hoverOffset": 4}]}, "options": {"responsive": true, "plugins": {"legend": {"position": "right", "labels": {"color": "#c9d1d9"}}, "title": {"display": true, "text": "Language Breakdown", "color": "#c9d1d9"}}}};
+  if (langCfg && langCfg.type) {
+    new Chart(document.getElementById('langChart'), langCfg);
+  }
+
+  const debtCfg = {"type": "bar", "data": {"labels": ["Todo Density", "Code Staleness", "Test Coverage", "Complexity", "Dependency Freshness", "Documentation", "Dead Code"], "datasets": [{"label": "Tech Debt Score", "data": [14, 0, 0, 4, 0, 2, 2], "backgroundColor": ["#3fb950", "#3fb950", "#3fb950", "#3fb950", "#3fb950", "#3fb950", "#3fb950"], "borderColor": ["#3fb950", "#3fb950", "#3fb950", "#3fb950", "#3fb950", "#3fb950", "#3fb950"], "borderWidth": 1}]}, "options": {"responsive": true, "plugins": {"legend": {"display": false}, "title": {"display": true, "text": "Tech Debt by Dimension (0=clean, 100=critical)", "color": "#c9d1d9"}}, "scales": {"y": {"beginAtZero": true, "max": 100, "ticks": {"color": "#8b949e"}, "grid": {"color": "#30363d"}}, "x": {"ticks": {"color": "#8b949e"}, "grid": {"color": "#30363d"}}}}};
+  if (debtCfg && debtCfg.type) {
+    new Chart(document.getElementById('debtChart'), debtCfg);
+  }
+</script>
+
+</body>
+</html>

@@ -43,9 +43,9 @@ runs:
         if [ -n "${{ inputs.analyzers }}" ]; then
           ANALYZERS_FLAG="--analyzers ${{ inputs.analyzers }}"
         fi
-        gitopsy ${{ inputs.path }} --output ${{ inputs.output }} $ANALYZERS_FLAG
+        gitopsy --output ${{ inputs.output }} $ANALYZERS_FLAG ${{ inputs.path }}
         echo "report-path=${{ inputs.output }}" >> $GITHUB_OUTPUT
-        GRADE=$(gitopsy ${{ inputs.path }} --json | python -c "import sys,json; d=json.load(sys.stdin); print(d.get('tech_debt',{}).get('grade','N/A'))" 2>/dev/null || echo "N/A")
+        GRADE=$(gitopsy --json ${{ inputs.path }} | python -c "import sys,json; d=json.load(sys.stdin); print(d.get('tech_debt',{}).get('grade','N/A'))" 2>/dev/null || echo "N/A")
         echo "overall-grade=$GRADE" >> $GITHUB_OUTPUT
 
     - name: Upload report artifact

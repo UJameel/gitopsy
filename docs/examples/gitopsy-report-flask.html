@@ -1,0 +1,4561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gitopsy Report — gitopsy-flask</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    /* ===== CSS Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --orange: #f0883e;
+      --red: #f85149;
+      --purple: #bc8cff;
+      --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    code, pre {
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
+    pre {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 16px;
+      overflow-x: auto;
+      position: relative;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 11px;
+      padding: 3px 8px;
+    }
+    .copy-btn:hover { color: var(--text); }
+
+    /* ===== Layout ===== */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .header-left h1 {
+      font-family: var(--mono);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .header-left .subtitle {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 3px 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .grade-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      font-family: var(--mono);
+      font-size: 22px;
+      font-weight: 700;
+      border: 3px solid;
+    }
+
+    .grade-A { color: var(--green); border-color: var(--green); }
+    .grade-B { color: #56d364; border-color: #56d364; }
+    .grade-C { color: var(--yellow); border-color: var(--yellow); }
+    .grade-D { color: var(--orange); border-color: var(--orange); }
+    .grade-F { color: var(--red); border-color: var(--red); }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px 48px; }
+
+    /* ===== Score Dashboard ===== */
+    .score-dashboard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin: 24px 0 0;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .score-overall {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 80px;
+    }
+
+    .score-overall-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      font-family: var(--mono);
+      font-size: 28px;
+      font-weight: 700;
+      border: 3px solid;
+    }
+
+    .score-overall-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .score-divider {
+      width: 1px;
+      height: 60px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    .score-mini-grid {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+
+    .score-mini {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 60px;
+    }
+
+    .score-mini-circle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      border: 2px solid;
+    }
+
+    .score-mini-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* ===== Tabs ===== */
+    .tabs {
+      display: flex;
+      gap: 2px;
+      border-bottom: 1px solid var(--border);
+      margin: 24px 0 0;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: var(--sans);
+      font-size: 14px;
+      padding: 10px 16px;
+      transition: color 0.15s;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active {
+      color: var(--text);
+      border-bottom-color: var(--accent);
+    }
+
+    .tab-panel { display: none; padding: 24px 0; }
+    .tab-panel.active { display: block; }
+
+    /* ===== Section headers ===== */
+    .section { margin-bottom: 32px; }
+    .section-title {
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    /* ===== Tables ===== */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      background: var(--surface2);
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface2); }
+
+    /* Search bar */
+    .search-bar {
+      width: 100%;
+      max-width: 400px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 13px;
+      padding: 7px 12px;
+      margin-bottom: 12px;
+      outline: none;
+    }
+    .search-bar:focus { border-color: var(--accent); }
+
+    /* ===== Cards ===== */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    /* ===== Score bar ===== */
+    .score-bar-wrap { margin: 6px 0; }
+    .score-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 3px;
+    }
+    .score-bar-track {
+      background: var(--surface2);
+      border-radius: 3px;
+      height: 6px;
+      overflow: hidden;
+    }
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    /* ===== Pills / Badges ===== */
+    .pill {
+      display: inline-block;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+    }
+    .pill-green  { background: rgba(63,185,80,.15);  color: var(--green); }
+    .pill-yellow { background: rgba(210,153,34,.15); color: var(--yellow); }
+    .pill-orange { background: rgba(240,136,62,.15); color: var(--orange); }
+    .pill-red    { background: rgba(248,81,73,.15);  color: var(--red); }
+    .pill-blue   { background: rgba(88,166,255,.15); color: var(--accent); }
+    .pill-purple { background: rgba(188,140,255,.15);color: var(--purple); }
+    .pill-gray   { background: rgba(139,148,158,.15);color: var(--text-muted); }
+
+    /* Risk banners */
+    .risk-banner {
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .risk-critical { background: rgba(248,81,73,.15);  border: 1px solid var(--red);    color: var(--red); }
+    .risk-high     { background: rgba(240,136,62,.15); border: 1px solid var(--orange); color: var(--orange); }
+    .risk-medium   { background: rgba(210,153,34,.15); border: 1px solid var(--yellow); color: var(--yellow); }
+    .risk-low      { background: rgba(63,185,80,.15);  border: 1px solid var(--green);  color: var(--green); }
+
+    /* Method badges */
+    .method-GET    { background: rgba(88,166,255,.15);  color: var(--accent);  border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+    .method-POST   { background: rgba(63,185,80,.15);   color: var(--green);   border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+    .method-PUT    { background: rgba(210,153,34,.15);  color: var(--yellow);  border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+    .method-DELETE { background: rgba(248,81,73,.15);   color: var(--red);     border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+    .method-PATCH  { background: rgba(188,140,255,.15); color: var(--purple);  border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+
+    /* Status badges */
+    .status-ok      { background: rgba(63,185,80,.15);  color: var(--green);       border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
+    .status-outdated{ background: rgba(248,81,73,.15);  color: var(--red);         border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
+    .status-unknown { background: rgba(139,148,158,.15);color: var(--text-muted);  border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
+
+    /* Severity badges */
+    .sev-critical { background: rgba(248,81,73,.15);   color: var(--red);       border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
+    .sev-high     { background: rgba(240,136,62,.15);  color: var(--orange);    border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
+    .sev-medium   { background: rgba(210,153,34,.15);  color: var(--yellow);    border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
+    .sev-low      { background: rgba(88,166,255,.15);  color: var(--accent);    border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
+
+    /* ===== Details / collapsible ===== */
+    details {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    summary {
+      cursor: pointer;
+      padding: 10px 14px;
+      font-weight: 600;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::before {
+      content: '▶';
+      font-size: 10px;
+      color: var(--text-muted);
+      transition: transform 0.15s;
+    }
+    details[open] > summary::before { transform: rotate(90deg); }
+    .details-content { padding: 0 14px 14px; }
+
+    /* ===== File tree ===== */
+    .file-tree {
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.8;
+    }
+    .file-tree ul { list-style: none; padding-left: 16px; }
+    .file-tree li { color: var(--text-muted); }
+    .file-tree li.dir { color: var(--accent); font-weight: 600; }
+
+    /* ===== Hotspot table score ===== */
+    .score-num {
+      font-family: var(--mono);
+      font-weight: 700;
+    }
+
+    /* ===== Step list ===== */
+    .step-list { list-style: none; counter-reset: step; }
+    .step-list li {
+      counter-increment: step;
+      display: flex;
+      gap: 14px;
+      margin-bottom: 16px;
+      align-items: flex-start;
+    }
+    .step-list li::before {
+      content: counter(step);
+      background: var(--accent);
+      color: var(--bg);
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 12px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .step-content { flex: 1; }
+    .step-desc { margin-bottom: 6px; }
+
+    /* ===== Charts ===== */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 700px) {
+      .charts-row { grid-template-columns: 1fr; }
+    }
+    .chart-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      max-height: 320px;
+    }
+
+    /* ===== Gotcha list ===== */
+    .gotcha-list { list-style: none; }
+    .gotcha-list li {
+      display: flex;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .gotcha-list li:last-child { border-bottom: none; }
+    .gotcha-icon { color: var(--yellow); font-size: 16px; flex-shrink: 0; }
+
+    /* ===== Recommendations ===== */
+    .rec-list { list-style: none; }
+    .rec-list li {
+      display: flex;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    .rec-icon { color: var(--accent); flex-shrink: 0; }
+
+    /* ===== Prereq list ===== */
+    .prereq-list { list-style: none; }
+    .prereq-list li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .prereq-list li:last-child { border-bottom: none; }
+
+    /* ===== Empty state ===== */
+    .empty {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 16px 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== Header ===== -->
+<header class="header">
+  <div class="header-left">
+    <h1>gitopsy / gitopsy-flask</h1>
+    <div class="subtitle">
+      Generated 2026-03-28 15:51:38 UTC
+       · commit 7ef2946
+    </div>
+  </div>
+  <div class="header-right">
+    
+    <div class="grade-badge grade-A">A</div>
+    
+    
+    <div class="badge">217 files</div>
+    <div class="badge">36,109 lines</div>
+    
+    <div class="badge">flask</div>
+    
+    
+  </div>
+</header>
+
+<!-- ===== Main ===== -->
+<div class="container">
+
+  <!-- ===== Score Dashboard ===== -->
+  
+  
+  <div class="score-dashboard">
+    <div class="score-overall">
+      <div class="score-overall-badge grade-C" style="border-color:currentColor">
+        C
+      </div>
+      <div class="score-overall-label">Overall<br>Health</div>
+    </div>
+    <div class="score-divider"></div>
+    <div class="score-mini-grid">
+      
+      <div class="score-mini">
+        <div class="score-mini-circle grade-A" style="border-color:#3fb950;color:#3fb950">
+          A
+        </div>
+        <div class="score-mini-label">Tech Debt</div>
+      </div>
+      
+      <div class="score-mini">
+        <div class="score-mini-circle grade-B" style="border-color:#3fb950;color:#3fb950">
+          B
+        </div>
+        <div class="score-mini-label">Architecture</div>
+      </div>
+      
+      <div class="score-mini">
+        <div class="score-mini-circle grade-A" style="border-color:#3fb950;color:#3fb950">
+          A
+        </div>
+        <div class="score-mini-label">Dependencies</div>
+      </div>
+      
+      <div class="score-mini">
+        <div class="score-mini-circle grade-A" style="border-color:#3fb950;color:#3fb950">
+          A
+        </div>
+        <div class="score-mini-label">Conventions</div>
+      </div>
+      
+      <div class="score-mini">
+        <div class="score-mini-circle grade-D" style="border-color:#8b949e;color:#8b949e">
+          D
+        </div>
+        <div class="score-mini-label">API</div>
+      </div>
+      
+      <div class="score-mini">
+        <div class="score-mini-circle grade-F" style="border-color:#f85149;color:#f85149">
+          F
+        </div>
+        <div class="score-mini-label">Security</div>
+      </div>
+      
+      <div class="score-mini">
+        <div class="score-mini-circle grade-B" style="border-color:#3fb950;color:#3fb950">
+          B
+        </div>
+        <div class="score-mini-label">Onboarding</div>
+      </div>
+      
+      <div class="score-mini">
+        <div class="score-mini-circle grade-B" style="border-color:#3fb950;color:#3fb950">
+          B
+        </div>
+        <div class="score-mini-label">Setup</div>
+      </div>
+      
+    </div>
+  </div>
+  
+
+  <nav class="tabs">
+    <button class="tab-btn active" onclick="showTab('architecture', this)">Architecture</button>
+    <button class="tab-btn" onclick="showTab('tech-debt', this)">Tech Debt</button>
+    <button class="tab-btn" onclick="showTab('onboarding', this)">Onboarding</button>
+    <button class="tab-btn" onclick="showTab('dependencies', this)">Dependencies</button>
+    <button class="tab-btn" onclick="showTab('conventions', this)">Conventions</button>
+    <button class="tab-btn" onclick="showTab('apis', this)">APIs</button>
+    <button class="tab-btn" onclick="showTab('security', this)">Security</button>
+    <button class="tab-btn" onclick="showTab('setup', this)">Setup</button>
+  </nav>
+
+  <!-- =============================== ARCHITECTURE TAB =============================== -->
+  <div id="tab-architecture" class="tab-panel active">
+
+    
+    
+
+    <!-- Overview cards -->
+    <div class="section">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">Project Type</div>
+          <span class="pill pill-blue">monolith</span>
+          
+          <span class="pill pill-purple" style="margin-left:6px">flask</span>
+          
+        </div>
+        <div class="card">
+          <div class="card-title">Structure Pattern</div>
+          <span class="pill pill-green">flat</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Codebase Size</div>
+          <div style="font-size:22px;font-weight:700;font-family:var(--mono)">217</div>
+          <div style="color:var(--text-muted);font-size:12px">files · 36,109 lines</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Language breakdown + chart -->
+    <div class="section">
+      <div class="section-title">Language Breakdown</div>
+      <div style="display:grid;grid-template-columns:1fr 280px;gap:24px;align-items:start">
+        <div>
+          
+          <div class="score-bar-wrap">
+            <div class="score-bar-label">
+              <span>Python</span>
+              <span>42.1%</span>
+            </div>
+            <div class="score-bar-track">
+              <div class="score-bar-fill" style="width:42.13%;background:var(--accent)"></div>
+            </div>
+          </div>
+          
+          <div class="score-bar-wrap">
+            <div class="score-bar-label">
+              <span>reStructuredText</span>
+              <span>40.1%</span>
+            </div>
+            <div class="score-bar-track">
+              <div class="score-bar-fill" style="width:40.1%;background:var(--accent)"></div>
+            </div>
+          </div>
+          
+          <div class="score-bar-wrap">
+            <div class="score-bar-label">
+              <span>HTML</span>
+              <span>10.2%</span>
+            </div>
+            <div class="score-bar-track">
+              <div class="score-bar-fill" style="width:10.15%;background:var(--accent)"></div>
+            </div>
+          </div>
+          
+          <div class="score-bar-wrap">
+            <div class="score-bar-label">
+              <span>TOML</span>
+              <span>2.5%</span>
+            </div>
+            <div class="score-bar-track">
+              <div class="score-bar-fill" style="width:2.54%;background:var(--accent)"></div>
+            </div>
+          </div>
+          
+          <div class="score-bar-wrap">
+            <div class="score-bar-label">
+              <span>Markdown</span>
+              <span>1.5%</span>
+            </div>
+            <div class="score-bar-track">
+              <div class="score-bar-fill" style="width:1.52%;background:var(--accent)"></div>
+            </div>
+          </div>
+          
+          <div class="score-bar-wrap">
+            <div class="score-bar-label">
+              <span>YAML</span>
+              <span>1.0%</span>
+            </div>
+            <div class="score-bar-track">
+              <div class="score-bar-fill" style="width:1.02%;background:var(--accent)"></div>
+            </div>
+          </div>
+          
+          <div class="score-bar-wrap">
+            <div class="score-bar-label">
+              <span>CSS</span>
+              <span>1.0%</span>
+            </div>
+            <div class="score-bar-track">
+              <div class="score-bar-fill" style="width:1.02%;background:var(--accent)"></div>
+            </div>
+          </div>
+          
+          <div class="score-bar-wrap">
+            <div class="score-bar-label">
+              <span>SQL</span>
+              <span>1.0%</span>
+            </div>
+            <div class="score-bar-track">
+              <div class="score-bar-fill" style="width:1.02%;background:var(--accent)"></div>
+            </div>
+          </div>
+          
+          <div class="score-bar-wrap">
+            <div class="score-bar-label">
+              <span>JSON</span>
+              <span>0.5%</span>
+            </div>
+            <div class="score-bar-track">
+              <div class="score-bar-fill" style="width:0.51%;background:var(--accent)"></div>
+            </div>
+          </div>
+          
+          
+        </div>
+        <div class="chart-box" style="max-height:280px">
+          <canvas id="langChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Entry points -->
+    
+    <div class="section">
+      <div class="section-title">Entry Points</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>File</th><th>Type</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td><code>tests/test_apps/helloworld/wsgi.py</code></td>
+              <td><span class="pill pill-blue">web</span></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_apps/cliapp/app.py</code></td>
+              <td><span class="pill pill-blue">web</span></td>
+            </tr>
+            
+            <tr>
+              <td><code>src/flask/cli.py</code></td>
+              <td><span class="pill pill-blue">cli</span></td>
+            </tr>
+            
+            <tr>
+              <td><code>src/flask/app.py</code></td>
+              <td><span class="pill pill-blue">web</span></td>
+            </tr>
+            
+            <tr>
+              <td><code>src/flask/__main__.py</code></td>
+              <td><span class="pill pill-blue">cli</span></td>
+            </tr>
+            
+            <tr>
+              <td><code>src/flask/sansio/app.py</code></td>
+              <td><span class="pill pill-blue">web</span></td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    <!-- Key files -->
+    
+    <div class="section">
+      <div class="section-title">Key Files</div>
+      <input class="search-bar" type="text" placeholder="Filter key files..." oninput="filterTable(this, 'key-files-table')">
+      <div class="table-wrap">
+        <table id="key-files-table">
+          <thead><tr><th>File</th><th>Role</th><th>Importance</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td><code>src/flask/sansio/app.py</code></td>
+              <td>entry point</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:55%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">55</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>src/flask/cli.py</code></td>
+              <td>entry point</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:52%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">52</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_apps/helloworld/wsgi.py</code></td>
+              <td>entry point</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:50%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">50</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_apps/cliapp/app.py</code></td>
+              <td>entry point</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:50%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">50</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>src/flask/app.py</code></td>
+              <td>entry point</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:50%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">50</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>src/flask/__main__.py</code></td>
+              <td>entry point</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:50%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">50</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+              <td>module</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:40%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">40</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>src/flask/typing.py</code></td>
+              <td>module</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:17%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">17</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>pyproject.toml</code></td>
+              <td>package config</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:10%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">10</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>README.md</code></td>
+              <td>documentation</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:10%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">10</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>docs/Makefile</code></td>
+              <td>module</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:10%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">10</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>examples/tutorial/pyproject.toml</code></td>
+              <td>package config</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:10%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">10</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>examples/celery/pyproject.toml</code></td>
+              <td>package config</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:10%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">10</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>examples/celery/README.md</code></td>
+              <td>documentation</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:10%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">10</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>examples/javascript/pyproject.toml</code></td>
+              <td>package config</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:10%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">10</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>src/flask/sansio/README.md</code></td>
+              <td>documentation</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:10%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">10</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>src/flask/globals.py</code></td>
+              <td>module</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:9%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">9</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>src/flask/wrappers.py</code></td>
+              <td>module</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:7%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">7</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>src/flask/helpers.py</code></td>
+              <td>module</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:7%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">7</span>
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>src/flask/signals.py</code></td>
+              <td>module</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:3%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">3</span>
+              </td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    <!-- Layers -->
+    
+    <div class="section">
+      <div class="section-title">Detected Layers</div>
+      
+      <details>
+        <summary>
+          <span class="pill pill-purple">tests</span>
+          <span style="color:var(--text-muted);font-size:12px;font-weight:400">Test suite · 61 files</span>
+        </summary>
+        <div class="details-content">
+          <div class="file-tree">
+            <ul>
+              
+              <li><code>tests/test_basic.py</code></li>
+              
+              <li><code>tests/conftest.py</code></li>
+              
+              <li><code>tests/test_converters.py</code></li>
+              
+              <li><code>tests/test_logging.py</code></li>
+              
+              <li><code>tests/test_signals.py</code></li>
+              
+              <li><code>tests/test_request.py</code></li>
+              
+              <li><code>tests/test_async.py</code></li>
+              
+              <li><code>tests/test_session_interface.py</code></li>
+              
+              <li><code>tests/test_instance_config.py</code></li>
+              
+              <li><code>tests/test_views.py</code></li>
+              
+              <li><code>tests/test_json_tag.py</code></li>
+              
+              <li><code>tests/test_subclassing.py</code></li>
+              
+              <li><code>tests/test_reqctx.py</code></li>
+              
+              <li><code>tests/test_blueprints.py</code></li>
+              
+              <li><code>tests/test_config.py</code></li>
+              
+              <li><code>tests/test_user_error_handler.py</code></li>
+              
+              <li><code>tests/test_helpers.py</code></li>
+              
+              <li><code>tests/test_json.py</code></li>
+              
+              <li><code>tests/test_cli.py</code></li>
+              
+              <li><code>tests/test_templating.py</code></li>
+              
+              <li><code>tests/test_appctx.py</code></li>
+              
+              <li><code>tests/test_regression.py</code></li>
+              
+              <li><code>tests/test_testing.py</code></li>
+              
+              <li><code>tests/test_apps/.flaskenv</code></li>
+              
+              <li><code>tests/test_apps/.env</code></li>
+              
+              <li><code>tests/test_apps/blueprintapp/__init__.py</code></li>
+              
+              <li><code>tests/test_apps/blueprintapp/apps/__init__.py</code></li>
+              
+              <li><code>tests/test_apps/blueprintapp/apps/frontend/__init__.py</code></li>
+              
+              <li><code>tests/test_apps/blueprintapp/apps/frontend/templates/frontend/index.html</code></li>
+              
+              <li><code>tests/test_apps/blueprintapp/apps/admin/__init__.py</code></li>
+              
+              <li><code>tests/test_apps/blueprintapp/apps/admin/static/test.txt</code></li>
+              
+              <li><code>tests/test_apps/blueprintapp/apps/admin/static/css/test.css</code></li>
+              
+              <li><code>tests/test_apps/blueprintapp/apps/admin/templates/admin/index.html</code></li>
+              
+              <li><code>tests/test_apps/helloworld/hello.py</code></li>
+              
+              <li><code>tests/test_apps/helloworld/wsgi.py</code></li>
+              
+              <li><code>tests/test_apps/subdomaintestmodule/__init__.py</code></li>
+              
+              <li><code>tests/test_apps/subdomaintestmodule/static/hello.txt</code></li>
+              
+              <li><code>tests/test_apps/cliapp/importerrorapp.py</code></li>
+              
+              <li><code>tests/test_apps/cliapp/__init__.py</code></li>
+              
+              <li><code>tests/test_apps/cliapp/factory.py</code></li>
+              
+              <li><code>tests/test_apps/cliapp/message.txt</code></li>
+              
+              <li><code>tests/test_apps/cliapp/multiapp.py</code></li>
+              
+              <li><code>tests/test_apps/cliapp/app.py</code></li>
+              
+              <li><code>tests/test_apps/cliapp/inner1/__init__.py</code></li>
+              
+              <li><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></li>
+              
+              <li><code>tests/test_apps/cliapp/inner1/inner2/__init__.py</code></li>
+              
+              <li><code>tests/static/index.html</code></li>
+              
+              <li><code>tests/static/config.json</code></li>
+              
+              <li><code>tests/static/config.toml</code></li>
+              
+              <li><code>tests/type_check/typing_route.py</code></li>
+              
+              <li><code>tests/type_check/typing_app_decorators.py</code></li>
+              
+              <li><code>tests/type_check/typing_error_handler.py</code></li>
+              
+              <li><code>tests/templates/simple_template.html</code></li>
+              
+              <li><code>tests/templates/escaping_template.html</code></li>
+              
+              <li><code>tests/templates/template_filter.html</code></li>
+              
+              <li><code>tests/templates/mail.txt</code></li>
+              
+              <li><code>tests/templates/template_test.html</code></li>
+              
+              <li><code>tests/templates/context_template.html</code></li>
+              
+              <li><code>tests/templates/non_escaping_template.txt</code></li>
+              
+              <li><code>tests/templates/_macro.html</code></li>
+              
+              <li><code>tests/templates/nested/nested.txt</code></li>
+              
+            </ul>
+          </div>
+        </div>
+      </details>
+      
+      <details>
+        <summary>
+          <span class="pill pill-purple">docs</span>
+          <span style="color:var(--text-muted);font-size:12px;font-weight:400">Documentation · 79 files</span>
+        </summary>
+        <div class="details-content">
+          <div class="file-tree">
+            <ul>
+              
+              <li><code>docs/server.rst</code></li>
+              
+              <li><code>docs/index.rst</code></li>
+              
+              <li><code>docs/blueprints.rst</code></li>
+              
+              <li><code>docs/shell.rst</code></li>
+              
+              <li><code>docs/templating.rst</code></li>
+              
+              <li><code>docs/design.rst</code></li>
+              
+              <li><code>docs/signals.rst</code></li>
+              
+              <li><code>docs/contributing.rst</code></li>
+              
+              <li><code>docs/testing.rst</code></li>
+              
+              <li><code>docs/errorhandling.rst</code></li>
+              
+              <li><code>docs/Makefile</code></li>
+              
+              <li><code>docs/cli.rst</code></li>
+              
+              <li><code>docs/conf.py</code></li>
+              
+              <li><code>docs/config.rst</code></li>
+              
+              <li><code>docs/reqcontext.rst</code></li>
+              
+              <li><code>docs/views.rst</code></li>
+              
+              <li><code>docs/debugging.rst</code></li>
+              
+              <li><code>docs/extensiondev.rst</code></li>
+              
+              <li><code>docs/make.bat</code></li>
+              
+              <li><code>docs/quickstart.rst</code></li>
+              
+              <li><code>docs/lifecycle.rst</code></li>
+              
+              <li><code>docs/installation.rst</code></li>
+              
+              <li><code>docs/license.rst</code></li>
+              
+              <li><code>docs/logging.rst</code></li>
+              
+              <li><code>docs/web-security.rst</code></li>
+              
+              <li><code>docs/extensions.rst</code></li>
+              
+              <li><code>docs/appcontext.rst</code></li>
+              
+              <li><code>docs/gevent.rst</code></li>
+              
+              <li><code>docs/changes.rst</code></li>
+              
+              <li><code>docs/async-await.rst</code></li>
+              
+              <li><code>docs/api.rst</code></li>
+              
+              <li><code>docs/tutorial/install.rst</code></li>
+              
+              <li><code>docs/tutorial/templates.rst</code></li>
+              
+              <li><code>docs/tutorial/index.rst</code></li>
+              
+              <li><code>docs/tutorial/factory.rst</code></li>
+              
+              <li><code>docs/tutorial/static.rst</code></li>
+              
+              <li><code>docs/tutorial/tests.rst</code></li>
+              
+              <li><code>docs/tutorial/views.rst</code></li>
+              
+              <li><code>docs/tutorial/deploy.rst</code></li>
+              
+              <li><code>docs/tutorial/database.rst</code></li>
+              
+              <li><code>docs/tutorial/blog.rst</code></li>
+              
+              <li><code>docs/tutorial/layout.rst</code></li>
+              
+              <li><code>docs/tutorial/next.rst</code></li>
+              
+              <li><code>docs/patterns/index.rst</code></li>
+              
+              <li><code>docs/patterns/mongoengine.rst</code></li>
+              
+              <li><code>docs/patterns/sqlalchemy.rst</code></li>
+              
+              <li><code>docs/patterns/fileuploads.rst</code></li>
+              
+              <li><code>docs/patterns/wtforms.rst</code></li>
+              
+              <li><code>docs/patterns/javascript.rst</code></li>
+              
+              <li><code>docs/patterns/streaming.rst</code></li>
+              
+              <li><code>docs/patterns/lazyloading.rst</code></li>
+              
+              <li><code>docs/patterns/jquery.rst</code></li>
+              
+              <li><code>docs/patterns/celery.rst</code></li>
+              
+              <li><code>docs/patterns/sqlite3.rst</code></li>
+              
+              <li><code>docs/patterns/methodoverrides.rst</code></li>
+              
+              <li><code>docs/patterns/flashing.rst</code></li>
+              
+              <li><code>docs/patterns/singlepageapplications.rst</code></li>
+              
+              <li><code>docs/patterns/urlprocessors.rst</code></li>
+              
+              <li><code>docs/patterns/packages.rst</code></li>
+              
+              <li><code>docs/patterns/favicon.rst</code></li>
+              
+              <li><code>docs/patterns/viewdecorators.rst</code></li>
+              
+              <li><code>docs/patterns/appdispatch.rst</code></li>
+              
+              <li><code>docs/patterns/deferredcallbacks.rst</code></li>
+              
+              <li><code>docs/patterns/requestchecksum.rst</code></li>
+              
+              <li><code>docs/patterns/subclassing.rst</code></li>
+              
+              <li><code>docs/patterns/caching.rst</code></li>
+              
+              <li><code>docs/patterns/appfactories.rst</code></li>
+              
+              <li><code>docs/patterns/templateinheritance.rst</code></li>
+              
+              <li><code>docs/deploying/index.rst</code></li>
+              
+              <li><code>docs/deploying/eventlet.rst</code></li>
+              
+              <li><code>docs/deploying/proxy_fix.rst</code></li>
+              
+              <li><code>docs/deploying/apache-httpd.rst</code></li>
+              
+              <li><code>docs/deploying/asgi.rst</code></li>
+              
+              <li><code>docs/deploying/mod_wsgi.rst</code></li>
+              
+              <li><code>docs/deploying/uwsgi.rst</code></li>
+              
+              <li><code>docs/deploying/gunicorn.rst</code></li>
+              
+              <li><code>docs/deploying/waitress.rst</code></li>
+              
+              <li><code>docs/deploying/nginx.rst</code></li>
+              
+              <li><code>docs/deploying/gevent.rst</code></li>
+              
+            </ul>
+          </div>
+        </div>
+      </details>
+      
+      <details>
+        <summary>
+          <span class="pill pill-purple">src</span>
+          <span style="color:var(--text-muted);font-size:12px;font-weight:400">Source code · 26 files</span>
+        </summary>
+        <div class="details-content">
+          <div class="file-tree">
+            <ul>
+              
+              <li><code>src/flask/logging.py</code></li>
+              
+              <li><code>src/flask/signals.py</code></li>
+              
+              <li><code>src/flask/sessions.py</code></li>
+              
+              <li><code>src/flask/config.py</code></li>
+              
+              <li><code>src/flask/templating.py</code></li>
+              
+              <li><code>src/flask/globals.py</code></li>
+              
+              <li><code>src/flask/__init__.py</code></li>
+              
+              <li><code>src/flask/blueprints.py</code></li>
+              
+              <li><code>src/flask/cli.py</code></li>
+              
+              <li><code>src/flask/wrappers.py</code></li>
+              
+              <li><code>src/flask/app.py</code></li>
+              
+              <li><code>src/flask/debughelpers.py</code></li>
+              
+              <li><code>src/flask/py.typed</code></li>
+              
+              <li><code>src/flask/ctx.py</code></li>
+              
+              <li><code>src/flask/typing.py</code></li>
+              
+              <li><code>src/flask/testing.py</code></li>
+              
+              <li><code>src/flask/helpers.py</code></li>
+              
+              <li><code>src/flask/__main__.py</code></li>
+              
+              <li><code>src/flask/views.py</code></li>
+              
+              <li><code>src/flask/sansio/blueprints.py</code></li>
+              
+              <li><code>src/flask/sansio/README.md</code></li>
+              
+              <li><code>src/flask/sansio/app.py</code></li>
+              
+              <li><code>src/flask/sansio/scaffold.py</code></li>
+              
+              <li><code>src/flask/json/provider.py</code></li>
+              
+              <li><code>src/flask/json/__init__.py</code></li>
+              
+              <li><code>src/flask/json/tag.py</code></li>
+              
+            </ul>
+          </div>
+        </div>
+      </details>
+      
+    </div>
+    
+
+    <!-- Internal deps -->
+    
+    <div class="section">
+      <div class="section-title">Internal Dependencies</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>From</th><th>Imports</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td><code>tests/test_basic.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_basic.py</code></td>
+              <td><code>src/flask/typing.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/conftest.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_converters.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_logging.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_logging.py</code></td>
+              <td><code>src/flask/logging.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_signals.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_request.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_async.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_session_interface.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_instance_config.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_views.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_json_tag.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_subclassing.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_reqctx.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_blueprints.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_config.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_user_error_handler.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_helpers.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_json.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_cli.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_templating.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_templating.py</code></td>
+              <td><code>src/flask/logging.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_appctx.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_regression.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_testing.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_apps/blueprintapp/__init__.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_apps/blueprintapp/apps/frontend/__init__.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_apps/blueprintapp/apps/admin/__init__.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_apps/helloworld/hello.py</code></td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+            </tr>
+            
+            
+            <tr>
+              <td colspan="2" style="color:var(--text-muted);text-align:center">
+                … and 121 more
+              </td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    
+  </div>
+
+  <!-- =============================== TECH DEBT TAB =============================== -->
+  <div id="tab-tech-debt" class="tab-panel">
+
+    
+    
+
+    <!-- Score header -->
+    <div class="section">
+      <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+        <div class="grade-badge grade-A" style="width:80px;height:80px;font-size:36px">A</div>
+        <div>
+          <div style="font-size:32px;font-weight:700;font-family:var(--mono)">19<span style="font-size:16px;color:var(--text-muted)">/100</span></div>
+          <div style="color:var(--text-muted)">Overall Tech Debt Score — lower is better</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="charts-row">
+      <div class="chart-box">
+        <canvas id="debtChart"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">Dimension Scores</div>
+        
+        <div class="score-bar-wrap">
+          <div class="score-bar-label">
+            <span>Todo Density</span>
+            <span class="score-num">0</span>
+          </div>
+          <div class="score-bar-track">
+            <div class="score-bar-fill" style="width:0%;background:var(--green)"></div>
+          </div>
+        </div>
+        
+        <div class="score-bar-wrap">
+          <div class="score-bar-label">
+            <span>Code Staleness</span>
+            <span class="score-num">0</span>
+          </div>
+          <div class="score-bar-track">
+            <div class="score-bar-fill" style="width:0%;background:var(--green)"></div>
+          </div>
+        </div>
+        
+        <div class="score-bar-wrap">
+          <div class="score-bar-label">
+            <span>Test Coverage</span>
+            <span class="score-num">0</span>
+          </div>
+          <div class="score-bar-track">
+            <div class="score-bar-fill" style="width:0%;background:var(--green)"></div>
+          </div>
+        </div>
+        
+        <div class="score-bar-wrap">
+          <div class="score-bar-label">
+            <span>Complexity</span>
+            <span class="score-num">26</span>
+          </div>
+          <div class="score-bar-track">
+            <div class="score-bar-fill" style="width:26%;background:#56d364"></div>
+          </div>
+        </div>
+        
+        <div class="score-bar-wrap">
+          <div class="score-bar-label">
+            <span>Dependency Freshness</span>
+            <span class="score-num">0</span>
+          </div>
+          <div class="score-bar-track">
+            <div class="score-bar-fill" style="width:0%;background:var(--green)"></div>
+          </div>
+        </div>
+        
+        <div class="score-bar-wrap">
+          <div class="score-bar-label">
+            <span>Documentation</span>
+            <span class="score-num">98</span>
+          </div>
+          <div class="score-bar-track">
+            <div class="score-bar-fill" style="width:98%;background:var(--red)"></div>
+          </div>
+        </div>
+        
+        <div class="score-bar-wrap">
+          <div class="score-bar-label">
+            <span>Dead Code</span>
+            <span class="score-num">0</span>
+          </div>
+          <div class="score-bar-track">
+            <div class="score-bar-fill" style="width:0%;background:var(--green)"></div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+
+    <!-- Dimension details table -->
+    <div class="section">
+      <div class="section-title">Dimension Details</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Dimension</th><th>Score</th><th>Weight</th><th>Detail</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td><strong>Todo Density</strong></td>
+              <td>
+                <span class="score-num " style="color:var(--green)">0</span>
+              </td>
+              <td style="color:var(--text-muted)">15%</td>
+              <td style="color:var(--text-muted);font-size:12px">1 TODO/FIXME/HACK comments across 18390 lines (0.1 per 1000 lines)</td>
+            </tr>
+            
+            <tr>
+              <td><strong>Code Staleness</strong></td>
+              <td>
+                <span class="score-num " style="color:var(--green)">0</span>
+              </td>
+              <td style="color:var(--text-muted)">10%</td>
+              <td style="color:var(--text-muted);font-size:12px">Code staleness analysis requires git history (not available or not computed).</td>
+            </tr>
+            
+            <tr>
+              <td><strong>Test Coverage</strong></td>
+              <td>
+                <span class="score-num " style="color:var(--green)">0</span>
+              </td>
+              <td style="color:var(--text-muted)">20%</td>
+              <td style="color:var(--text-muted);font-size:12px">49 test files vs 34 source files (ratio: 1.44)</td>
+            </tr>
+            
+            <tr>
+              <td><strong>Complexity</strong></td>
+              <td>
+                <span class="score-num " style="color:#56d364">26</span>
+              </td>
+              <td style="color:var(--text-muted)">20%</td>
+              <td style="color:var(--text-muted);font-size:12px">11 files exceed 500 lines.</td>
+            </tr>
+            
+            <tr>
+              <td><strong>Dependency Freshness</strong></td>
+              <td>
+                <span class="score-num " style="color:var(--green)">0</span>
+              </td>
+              <td style="color:var(--text-muted)">10%</td>
+              <td style="color:var(--text-muted);font-size:12px">Dependency freshness analysis requires network access to version registries. Run with --check-deps to enable.</td>
+            </tr>
+            
+            <tr>
+              <td><strong>Documentation</strong></td>
+              <td>
+                <span class="score-num " style="color:var(--red)">98</span>
+              </td>
+              <td style="color:var(--text-muted)">15%</td>
+              <td style="color:var(--text-muted);font-size:12px">82/83 Python files lack module docstrings (99%)</td>
+            </tr>
+            
+            <tr>
+              <td><strong>Dead Code</strong></td>
+              <td>
+                <span class="score-num " style="color:var(--green)">0</span>
+              </td>
+              <td style="color:var(--text-muted)">10%</td>
+              <td style="color:var(--text-muted);font-size:12px">22/83 Python files have no imports from internal modules.</td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Hotspots -->
+    
+    <div class="section">
+      <div class="section-title">Hotspots</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>File</th><th>Score</th><th>Reasons</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td><code>tests/test_basic.py</code></td>
+              <td><span class="score-num" style="color:var(--red)">79</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">
+                File has 1970 lines (threshold: 500)
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>src/flask/app.py</code></td>
+              <td><span class="score-num" style="color:var(--red)">72</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">
+                File has 1625 lines (threshold: 500)
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>src/flask/cli.py</code></td>
+              <td><span class="score-num" style="color:var(--red)">62</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">
+                File has 1127 lines (threshold: 500)
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_blueprints.py</code></td>
+              <td><span class="score-num" style="color:var(--red)">62</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">
+                File has 1118 lines (threshold: 500)
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>src/flask/sansio/app.py</code></td>
+              <td><span class="score-num" style="color:var(--red)">60</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">
+                File has 1010 lines (threshold: 500)
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>src/flask/sansio/scaffold.py</code></td>
+              <td><span class="score-num" style="color:var(--red)">55</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">
+                File has 792 lines (threshold: 500)
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>tests/test_cli.py</code></td>
+              <td><span class="score-num" style="color:var(--red)">54</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">
+                File has 703 lines (threshold: 500)
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>src/flask/sansio/blueprints.py</code></td>
+              <td><span class="score-num" style="color:var(--red)">53</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">
+                File has 692 lines (threshold: 500)
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>src/flask/helpers.py</code></td>
+              <td><span class="score-num" style="color:var(--red)">53</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">
+                File has 682 lines (threshold: 500)
+              </td>
+            </tr>
+            
+            <tr>
+              <td><code>src/flask/ctx.py</code></td>
+              <td><span class="score-num" style="color:var(--red)">50</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">
+                File has 540 lines (threshold: 500)
+              </td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    <!-- Recommendations -->
+    
+    <div class="section">
+      <div class="section-title">Recommendations</div>
+      <ul class="rec-list">
+        
+        <li>
+          <span class="rec-icon">→</span>
+          <span>Add module docstrings (82/83 Python files lack module docstrings (99%)) — helps maintainability and auto-generated docs.</span>
+        </li>
+        
+        <li>
+          <span class="rec-icon">→</span>
+          <span>Refactor large files (11 files exceed 500 lines.) — split files over 500 lines into smaller modules.</span>
+        </li>
+        
+      </ul>
+    </div>
+    
+
+    
+  </div>
+
+  <!-- =============================== ONBOARDING TAB =============================== -->
+  <div id="tab-onboarding" class="tab-panel">
+
+    
+    
+
+    <!-- Project summary -->
+    <div class="section">
+      <div class="section-title">What Is This Project?</div>
+      <div class="card">
+        <p><div align="center"><img src="https://raw.githubusercontent.com/pallets/flask/refs/heads/stable/docs/_static/flask-name.svg" alt="" height="150"></div></p>
+      </div>
+      
+      <div class="card">
+        <div class="card-title">Architecture Overview</div>
+        <p style="color:var(--text-muted)">This is a monolith project using flask with a flat structure. Primary languages: Python (42%), reStructuredText (40%), HTML (10%). Entry points: tests/test_apps/helloworld/wsgi.py (web), tests/test_apps/cliapp/app.py (web), src/flask/cli.py (cli). Layers detected: tests, docs, src.</p>
+      </div>
+      
+    </div>
+
+    <!-- Key files to read first -->
+    
+    <div class="section">
+      <div class="section-title">Key Files to Read First</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>File</th><th>Role</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td style="color:var(--text-muted)">1</td>
+              <td><code>src/flask/sansio/app.py</code></td>
+              <td>entry point</td>
+            </tr>
+            
+            <tr>
+              <td style="color:var(--text-muted)">2</td>
+              <td><code>src/flask/cli.py</code></td>
+              <td>entry point</td>
+            </tr>
+            
+            <tr>
+              <td style="color:var(--text-muted)">3</td>
+              <td><code>tests/test_apps/helloworld/wsgi.py</code></td>
+              <td>entry point</td>
+            </tr>
+            
+            <tr>
+              <td style="color:var(--text-muted)">4</td>
+              <td><code>tests/test_apps/cliapp/app.py</code></td>
+              <td>entry point</td>
+            </tr>
+            
+            <tr>
+              <td style="color:var(--text-muted)">5</td>
+              <td><code>src/flask/app.py</code></td>
+              <td>entry point</td>
+            </tr>
+            
+            <tr>
+              <td style="color:var(--text-muted)">6</td>
+              <td><code>src/flask/__main__.py</code></td>
+              <td>entry point</td>
+            </tr>
+            
+            <tr>
+              <td style="color:var(--text-muted)">7</td>
+              <td><code>tests/test_apps/cliapp/inner1/inner2/flask.py</code></td>
+              <td>module</td>
+            </tr>
+            
+            <tr>
+              <td style="color:var(--text-muted)">8</td>
+              <td><code>src/flask/typing.py</code></td>
+              <td>module</td>
+            </tr>
+            
+            <tr>
+              <td style="color:var(--text-muted)">9</td>
+              <td><code>pyproject.toml</code></td>
+              <td>package config</td>
+            </tr>
+            
+            <tr>
+              <td style="color:var(--text-muted)">10</td>
+              <td><code>README.md</code></td>
+              <td>documentation</td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    <!-- Setup steps -->
+    <div class="section">
+      <div class="section-title">How to Run Locally</div>
+      
+      <ol class="step-list">
+        
+        <li>
+          <div class="step-content">
+            <div class="step-desc">Install Python dependencies</div>
+            
+            <pre><code>pip install -r requirements.txt</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            
+          </div>
+        </li>
+        
+        <li>
+          <div class="step-content">
+            <div class="step-desc">Install package in development mode</div>
+            
+            <pre><code>pip install -e '.[dev]'</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            
+          </div>
+        </li>
+        
+      </ol>
+      
+    </div>
+
+    <!-- Test commands -->
+    
+    <div class="section">
+      <div class="section-title">How to Run Tests</div>
+      
+      <pre><code>pytest</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+      
+    </div>
+    
+
+    <!-- Contributors -->
+    
+    <div class="section">
+      <div class="section-title">Who to Ask</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Recent Commits</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td><strong>David Lord</strong></td>
+              <td style="color:var(--text-muted)">davidism@gmail.com</td>
+              <td>1</td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    <!-- Gotchas -->
+    
+
+    <!-- Glossary -->
+    
+    <div class="section">
+      <div class="section-title">Project Terms</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Term</th><th>Value</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td><code>SECRET_KEY</code></td>
+              <td style="color:var(--text-muted)">config</td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    
+  </div>
+
+  <!-- =============================== DEPENDENCIES TAB =============================== -->
+  <div id="tab-dependencies" class="tab-panel">
+
+    
+    
+
+    <!-- Overview cards -->
+    <div class="section">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">Package Manager</div>
+          <span class="pill pill-blue">pip</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Total Dependencies</div>
+          <div style="font-size:28px;font-weight:700;font-family:var(--mono)">6</div>
+          <div style="color:var(--text-muted);font-size:12px">0 outdated</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Risk Score</div>
+          <div style="font-size:28px;font-weight:700;font-family:var(--mono);color:var(--green)">0<span style="font-size:14px;color:var(--text-muted)">/100</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- License conflicts -->
+    
+
+    <!-- Dependencies table -->
+    <div class="section">
+      <div class="section-title">All Dependencies</div>
+      <input class="search-bar" type="text" placeholder="Filter dependencies..." oninput="filterTable(this, 'deps-table')">
+      <div class="table-wrap">
+        <table id="deps-table">
+          <thead><tr><th>Name</th><th>Version</th><th>Latest</th><th>License</th><th>Status</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td><strong>blinker</strong></td>
+              <td><code>1.9.0</code></td>
+              <td style="color:var(--text-muted)">—</td>
+              <td style="color:var(--text-muted);font-size:12px">—</td>
+              <td>
+                <span class="status-ok">up-to-date</span>
+                
+              </td>
+            </tr>
+            
+            <tr>
+              <td><strong>click</strong></td>
+              <td><code>8.1.3</code></td>
+              <td style="color:var(--text-muted)">—</td>
+              <td style="color:var(--text-muted);font-size:12px">—</td>
+              <td>
+                <span class="status-ok">up-to-date</span>
+                
+              </td>
+            </tr>
+            
+            <tr>
+              <td><strong>itsdangerous</strong></td>
+              <td><code>2.2.0</code></td>
+              <td style="color:var(--text-muted)">—</td>
+              <td style="color:var(--text-muted);font-size:12px">—</td>
+              <td>
+                <span class="status-ok">up-to-date</span>
+                
+              </td>
+            </tr>
+            
+            <tr>
+              <td><strong>jinja2</strong></td>
+              <td><code>3.1.2</code></td>
+              <td style="color:var(--text-muted)">—</td>
+              <td style="color:var(--text-muted);font-size:12px">—</td>
+              <td>
+                <span class="status-ok">up-to-date</span>
+                
+              </td>
+            </tr>
+            
+            <tr>
+              <td><strong>markupsafe</strong></td>
+              <td><code>2.1.1</code></td>
+              <td style="color:var(--text-muted)">—</td>
+              <td style="color:var(--text-muted);font-size:12px">—</td>
+              <td>
+                <span class="status-ok">up-to-date</span>
+                
+              </td>
+            </tr>
+            
+            <tr>
+              <td><strong>werkzeug</strong></td>
+              <td><code>3.1.0</code></td>
+              <td style="color:var(--text-muted)">—</td>
+              <td style="color:var(--text-muted);font-size:12px">—</td>
+              <td>
+                <span class="status-ok">up-to-date</span>
+                
+              </td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    
+  </div>
+
+  <!-- =============================== CONVENTIONS TAB =============================== -->
+  <div id="tab-conventions" class="tab-panel">
+
+    
+    
+
+    <!-- Consistency score -->
+    <div class="section">
+      <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:48px;font-weight:700;font-family:var(--mono);color:var(--green)">
+            100<span style="font-size:18px;color:var(--text-muted)">/100</span>
+          </div>
+          <div style="color:var(--text-muted)">Consistency Score</div>
+        </div>
+        <div class="card-grid" style="flex:1;min-width:0">
+          <div class="card">
+            <div class="card-title">Import Style</div>
+            <span class="pill pill-blue">mixed</span>
+          </div>
+          <div class="card">
+            <div class="card-title">Error Handling</div>
+            <span class="pill pill-purple">try-catch</span>
+          </div>
+          <div class="card">
+            <div class="card-title">Test Pattern</div>
+            <span class="pill pill-green">separate-dir</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Naming conventions -->
+    <div class="section">
+      <div class="section-title">Naming Conventions</div>
+      <details open>
+        <summary>Detected Naming Patterns</summary>
+        <div class="details-content">
+          <div class="table-wrap" style="margin-top:12px">
+            <table>
+              <thead><tr><th>Category</th><th>Convention</th></tr></thead>
+              <tbody>
+                <tr><td>Variables</td><td><span class="pill pill-blue">snake_case</span></td></tr>
+                <tr><td>Functions</td><td><span class="pill pill-blue">snake_case</span></td></tr>
+                <tr><td>Classes</td><td><span class="pill pill-purple">PascalCase</span></td></tr>
+                <tr><td>Files</td><td><span class="pill pill-green">snake_case</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- Formatting -->
+    <div class="section">
+      <div class="section-title">Formatting Rules</div>
+      <details open>
+        <summary>Detected Formatting</summary>
+        <div class="details-content">
+          <div class="table-wrap" style="margin-top:12px">
+            <table>
+              <thead><tr><th>Rule</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td>Indent Style</td><td><span class="pill pill-blue">spaces</span></td></tr>
+                <tr><td>Indent Width</td><td><code>4</code></td></tr>
+                <tr><td>Quotes</td><td><span style="color:var(--text-muted)">—</span></td></tr>
+                <tr><td>Semicolons</td><td><span style="color:var(--text-muted)">—</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- Git conventions -->
+    <div class="section">
+      <div class="section-title">Git Conventions</div>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">Commit Format</div>
+          <span class="pill pill-blue">freeform</span>
+        </div>
+        
+        <div class="card">
+          <div class="card-title">Linter Config</div>
+          <code>pyproject.toml</code>
+        </div>
+        
+      </div>
+    </div>
+
+    
+  </div>
+
+  <!-- =============================== APIs TAB =============================== -->
+  <div id="tab-apis" class="tab-panel">
+
+    
+    
+
+    <!-- Overview -->
+    <div class="section">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">API Type</div>
+          <span class="pill pill-blue">mixed</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Total Routes</div>
+          <div style="font-size:28px;font-weight:700;font-family:var(--mono)">298</div>
+          <div style="color:var(--text-muted);font-size:12px">118 undocumented</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HTTP Endpoints -->
+    
+    <div class="section">
+      <div class="section-title">HTTP Endpoints</div>
+      <input class="search-bar" type="text" placeholder="Filter endpoints..." oninput="filterTable(this, 'endpoints-table')">
+      <div class="table-wrap">
+        <table id="endpoints-table">
+          <thead><tr><th>Method</th><th>Path</th><th>Handler</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">examples/celery/src/task_app/__init__.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/result/<id></code></td>
+              <td style="color:var(--text-muted);font-size:12px">examples/celery/src/task_app/views.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/add</code></td>
+              <td style="color:var(--text-muted);font-size:12px">examples/celery/src/task_app/views.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/block</code></td>
+              <td style="color:var(--text-muted);font-size:12px">examples/celery/src/task_app/views.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/process</code></td>
+              <td style="color:var(--text-muted);font-size:12px">examples/celery/src/task_app/views.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/<any(xhr, jquery, fetch):js></code></td>
+              <td style="color:var(--text-muted);font-size:12px">examples/javascript/js_example/views.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/add</code></td>
+              <td style="color:var(--text-muted);font-size:12px">examples/javascript/js_example/views.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/hello</code></td>
+              <td style="color:var(--text-muted);font-size:12px">examples/tutorial/flaskr/__init__.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/logout</code></td>
+              <td style="color:var(--text-muted);font-size:12px">examples/tutorial/flaskr/auth.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">examples/tutorial/flaskr/blog.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">src/flask/ctx.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">src/flask/ctx.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/uploads/<path:name></code></td>
+              <td style="color:var(--text-muted);font-size:12px">src/flask/helpers.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/stream</code></td>
+              <td style="color:var(--text-muted);font-size:12px">src/flask/helpers.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/stream</code></td>
+              <td style="color:var(--text-muted);font-size:12px">src/flask/helpers.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">src/flask/sansio/scaffold.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">src/flask/sansio/scaffold.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_appctx.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_appctx.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_appctx.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_appctx.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_appctx.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_apps/blueprintapp/apps/admin/__init__.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/index2</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_apps/blueprintapp/apps/admin/__init__.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_apps/blueprintapp/apps/frontend/__init__.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/missing</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_apps/blueprintapp/apps/frontend/__init__.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_apps/helloworld/hello.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_async.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_async.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/home</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_async.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/home</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_async.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/error</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_async.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_async.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_async.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/error</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_async.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_async.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_async.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-PUT">PUT</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-OPTIONS">OPTIONS</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/more</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/more</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/clear</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/test</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/bump</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/read</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/set</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/get</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/getitem</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/setdefault</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/clear</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/vary-cookie-header-set</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/vary-header-set</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/no-vary-header</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/test/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/test_with_categories/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/test_filter/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/test_filters/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/test_filters_without_returning_categories/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/error</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/forbidden</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/1</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/2</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/3</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/E1</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/E3</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/key</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/abort</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/fail</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/fail</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/text</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/bytes</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/full_tuple</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/text_headers</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/text_status</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/response_headers</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/response_status</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/wsgi</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/dict</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/list</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/none</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/small_tuple</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/large_tuple</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/bad_type</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/bad_wsgi</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/hello/<name></code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/<path:path></code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/<lang_code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/<lang_code>/about</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/foo</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/<page></code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/киртест</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/user/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/user/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/foo/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/<test>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/nothing</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/login</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/ignored</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_basic.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/frontend-no</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/backend-no</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/what-is-a-sideend</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/decorator</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/function</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/forbidden</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/nope</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/bar</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/about</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/test/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/page/<int:page></code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/foo</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/bar/foo</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/bp</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/bp</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/<lang_code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/<lang_code>/about</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/no</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/no</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/no</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/a</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/b</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/child/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/error</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_blueprints.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/<list:args></code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_converters.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/<ctx:name></code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_converters.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_helpers.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_helpers.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_helpers.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/<self></code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_helpers.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_helpers.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_helpers.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_helpers.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_helpers.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_helpers.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/json</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_json.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/json</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_json.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/json</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_json.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/kw</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_json.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/dict</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_json.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/args_unpack</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_json.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/array</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_json.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_json.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/add</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_json.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_json.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_json.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_logging.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_logging.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_regression.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/test</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_regression.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_reqctx.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_reqctx.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/meh</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_reqctx.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_reqctx.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_reqctx.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_reqctx.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_reqctx.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/set</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_reqctx.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/get</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_reqctx.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/set_dynamic_cookie</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_reqctx.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/get_dynamic_cookie</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_reqctx.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_reqctx.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_request.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_request.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_session_interface.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_signals.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_signals.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_signals.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_signals.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_signals.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_signals.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_signals.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_subclassing.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_templating.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_templating.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_templating.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_templating.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_templating.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_templating.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_templating.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_templating.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_templating.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_templating.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_templating.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_templating.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_templating.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_templating.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_templating.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_templating.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_testing.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_testing.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_testing.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_testing.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/index</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_testing.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_testing.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_testing.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/redirect</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_testing.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/target</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_testing.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_testing.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_testing.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/other</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_testing.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/action</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_testing.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/echo</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_testing.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-POST">POST</span></td>
+              <td><code>/hello</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_testing.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/<company_id></code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_testing.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_testing.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/custom</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_user_error_handler.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/keyerror</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_user_error_handler.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/abort</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_user_error_handler.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/parent</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_user_error_handler.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/child-unregistered</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_user_error_handler.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/child-registered</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_user_error_handler.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/forbidden</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_user_error_handler.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/forbidden-registered</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_user_error_handler.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/forbidden-unregistered</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_user_error_handler.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/error</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_user_error_handler.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/error</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_user_error_handler.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/undefined</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_user_error_handler.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/forbidden</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_user_error_handler.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/forbidden</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_user_error_handler.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/slash/</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_user_error_handler.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/custom</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_user_error_handler.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/error</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_user_error_handler.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/abort</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_user_error_handler.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/raise</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_user_error_handler.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/str</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/type_check/typing_route.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/bytes</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/type_check/typing_route.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/json</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/type_check/typing_route.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/json/dict</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/type_check/typing_route.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/json/dict</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/type_check/typing_route.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/typed-dict</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/type_check/typing_route.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/generator</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/type_check/typing_route.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/generator-expression</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/type_check/typing_route.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/iterator</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/type_check/typing_route.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/status</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/type_check/typing_route.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/status/<int:code></code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/type_check/typing_route.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/status-enum</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/type_check/typing_route.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/headers</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/type_check/typing_route.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/template</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/type_check/typing_route.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/template/<name></code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/type_check/typing_route.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/template</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/type_check/typing_route.py</td>
+            </tr>
+            
+            <tr>
+              <td><span class="method-GET">GET</span></td>
+              <td><code>/async</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/type_check/typing_route.py</td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    <!-- CLI Commands -->
+    
+    <div class="section">
+      <div class="section-title">CLI Commands</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Command</th><th>Description</th><th>Handler</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td><code>init-db</code></td>
+              <td style="color:var(--text-muted)">Clear existing data and create new tables.</td>
+              <td style="color:var(--text-muted);font-size:12px">examples/tutorial/flaskr/db.py</td>
+            </tr>
+            
+            <tr>
+              <td><code>test</code></td>
+              <td style="color:var(--text-muted)">—</td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_cli.py</td>
+            </tr>
+            
+            <tr>
+              <td><code>test2</code></td>
+              <td style="color:var(--text-muted)">—</td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_cli.py</td>
+            </tr>
+            
+            <tr>
+              <td><code>test</code></td>
+              <td style="color:var(--text-muted)">—</td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_cli.py</td>
+            </tr>
+            
+            <tr>
+              <td><code>test</code></td>
+              <td style="color:var(--text-muted)">—</td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_cli.py</td>
+            </tr>
+            
+            <tr>
+              <td><code>show</code></td>
+              <td style="color:var(--text-muted)">—</td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_cli.py</td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    
+  </div>
+
+  <!-- =============================== SECURITY TAB =============================== -->
+  <div id="tab-security" class="tab-panel">
+
+    
+    
+
+    <!-- Risk banner -->
+    <div class="risk-banner risk-critical">
+      <span style="font-size:18px">&#9888;</span>
+      <span>Risk Level: <strong>CRITICAL</strong>
+         · 14 secret(s) found
+      </span>
+    </div>
+
+    <!-- Overview cards -->
+    <div class="section">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">Auth Pattern</div>
+          <span style="color:var(--text-muted)">None detected</span>
+        </div>
+        
+        <div class="card">
+          <div class="card-title">Findings</div>
+          <div style="font-size:28px;font-weight:700;font-family:var(--mono)">15</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Findings table -->
+    
+    <div class="section">
+      <div class="section-title">Security Findings</div>
+      <input class="search-bar" type="text" placeholder="Filter findings..." oninput="filterTable(this, 'findings-table')">
+      <div class="table-wrap">
+        <table id="findings-table">
+          <thead><tr><th>Severity</th><th>Category</th><th>File</th><th>Line</th><th>Description</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/config.rst</td>
+              <td style="color:var(--text-muted)">41</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY='192b9bdd22ab9ed4d12e236c78afcb9a393ec15f71bbf5dc</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/config.rst</td>
+              <td style="color:var(--text-muted)">513</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY = '192b9bdd22ab9ed4d12e236c78afcb9a393ec15f71bbf5</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/config.rst</td>
+              <td style="color:var(--text-muted)">560</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY="5f352379324c22463451387a0aec5d2f"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/config.rst</td>
+              <td style="color:var(--text-muted)">578</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY="5f352379324c22463451387a0aec5d2f"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/config.rst</td>
+              <td style="color:var(--text-muted)">587</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY = "5f352379324c22463451387a0aec5d2f"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">docs/tutorial/deploy.rst</td>
+              <td style="color:var(--text-muted)">73</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY = '192b9bdd22ab9ed4d12e236c78afcb9a393ec15f71bbf5</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">src/flask/config.py</td>
+              <td style="color:var(--text-muted)">66</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY = 'development key'</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/conftest.py</td>
+              <td style="color:var(--text-muted)">49</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY="test key"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/static/config.toml</td>
+              <td style="color:var(--text-muted)">2</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY="config"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_config.py</td>
+              <td style="color:var(--text-muted)">10</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY = "config"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_config.py</td>
+              <td style="color:var(--text-muted)">120</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY="config"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_config.py</td>
+              <td style="color:var(--text-muted)">124</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY="config"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_config.py</td>
+              <td style="color:var(--text-muted)">137</td>
+              <td style="font-size:12px">Potential secret-key detected: SECRET_KEY = "config"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-high">high</span></td>
+              <td><code style="font-size:11px">hardcoded-secret</code></td>
+              <td style="color:var(--text-muted);font-size:12px">tests/test_reqctx.py</td>
+              <td style="color:var(--text-muted)">243</td>
+              <td style="font-size:12px">Potential secret-key detected: secret_key = "secret_key"</td>
+            </tr>
+            
+            <tr>
+              <td><span class="sev-critical">critical</span></td>
+              <td><code style="font-size:11px">env-file-in-git</code></td>
+              <td style="color:var(--text-muted);font-size:12px">.env</td>
+              <td style="color:var(--text-muted)">—</td>
+              <td style="font-size:12px">.env file appears in git history — secrets may have been committed</td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    <!-- Recommendations -->
+    
+    <div class="section">
+      <div class="section-title">Recommendations</div>
+      <ul class="rec-list">
+        
+        <li>
+          <span class="rec-icon">→</span>
+          <span>Move all secrets to environment variables or a secrets manager</span>
+        </li>
+        
+        <li>
+          <span class="rec-icon">→</span>
+          <span>Add .env to .gitignore and rotate any exposed credentials</span>
+        </li>
+        
+        <li>
+          <span class="rec-icon">→</span>
+          <span>Consider adding authentication to protect API endpoints</span>
+        </li>
+        
+      </ul>
+    </div>
+    
+
+    
+  </div>
+
+  <!-- =============================== SETUP TAB =============================== -->
+  <div id="tab-setup" class="tab-panel">
+
+    
+    
+
+    <!-- Prerequisites -->
+    
+    <div class="section">
+      <div class="section-title">Prerequisites</div>
+      <ul class="prereq-list">
+        
+        <li>
+          <span class="pill pill-blue">python</span>
+          <code style="font-size:12px">>=3.10</code>
+          <span style="font-size:12px;color:var(--text-muted)">https://python.org/downloads</span>
+        </li>
+        
+      </ul>
+    </div>
+    
+
+    <!-- Install steps -->
+    
+    <div class="section">
+      <div class="section-title">Installation</div>
+      <ol class="step-list">
+        
+        <li>
+          <div class="step-content">
+            <div class="step-desc">Install the package in development mode</div>
+            
+            <pre><code>pip install -e .</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            
+          </div>
+        </li>
+        
+      </ol>
+    </div>
+    
+
+    <!-- Environment variables -->
+    
+    <div class="section">
+      <div class="section-title">Environment Variables</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Required</th><th>Description</th><th>Example</th></tr></thead>
+          <tbody>
+            
+            <tr>
+              <td><code>FLASK_RUN_FROM_CLI</code></td>
+              <td><span class="pill pill-gray">optional</span></td>
+              <td style="color:var(--text-muted);font-size:12px">—</td>
+              <td><code style="font-size:12px;color:var(--text-muted)">—</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>PYTHONSTARTUP</code></td>
+              <td><span class="pill pill-gray">optional</span></td>
+              <td style="color:var(--text-muted);font-size:12px">—</td>
+              <td><code style="font-size:12px;color:var(--text-muted)">—</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>FLASK_DEBUG</code></td>
+              <td><span class="pill pill-gray">optional</span></td>
+              <td style="color:var(--text-muted);font-size:12px">—</td>
+              <td><code style="font-size:12px;color:var(--text-muted)">—</code></td>
+            </tr>
+            
+            <tr>
+              <td><code>FLASK_SKIP_DOTENV</code></td>
+              <td><span class="pill pill-gray">optional</span></td>
+              <td style="color:var(--text-muted);font-size:12px">—</td>
+              <td><code style="font-size:12px;color:var(--text-muted)">—</code></td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    <!-- Run commands -->
+    
+
+    <!-- Test command -->
+    
+    <div class="section">
+      <div class="section-title">Test Command</div>
+      <pre><code>pytest</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+    </div>
+    
+
+    <!-- Build command -->
+    
+
+    <!-- Database setup -->
+    
+
+    <!-- Common issues -->
+    
+    <div class="section">
+      <div class="section-title">Common Issues</div>
+      
+      <details>
+        <summary>ModuleNotFoundError when running the app</summary>
+        <div class="details-content" style="color:var(--text-muted);padding-top:8px">
+          Make sure you've activated your virtual environment and run `pip install -r requirements.txt`
+        </div>
+      </details>
+      
+    </div>
+    
+
+    
+  </div>
+
+</div><!-- /container -->
+
+<script>
+  // ===== Tab switching =====
+  function showTab(name, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // ===== Table filter =====
+  function filterTable(input, tableId) {
+    const filter = input.value.toLowerCase();
+    const rows = document.getElementById(tableId).querySelectorAll('tbody tr');
+    rows.forEach(row => {
+      row.style.display = row.textContent.toLowerCase().includes(filter) ? '' : 'none';
+    });
+  }
+
+  // ===== Copy to clipboard =====
+  function copyCode(btn) {
+    const code = btn.previousElementSibling.textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      btn.textContent = 'copied!';
+      setTimeout(() => { btn.textContent = 'copy'; }, 2000);
+    });
+  }
+
+  // ===== Charts =====
+  Chart.defaults.color = '#8b949e';
+  Chart.defaults.borderColor = '#30363d';
+
+  const langCfg = {"type": "doughnut", "data": {"labels": ["Python", "reStructuredText", "HTML", "TOML", "Markdown", "YAML", "CSS", "SQL", "JSON"], "datasets": [{"data": [42.13, 40.1, 10.15, 2.54, 1.52, 1.02, 1.02, 1.02, 0.51], "backgroundColor": ["#58a6ff", "#3fb950", "#f85149", "#d29922", "#f0883e", "#bc8cff", "#79c0ff", "#56d364", "#ffa657"], "hoverOffset": 4}]}, "options": {"responsive": true, "plugins": {"legend": {"position": "right", "labels": {"color": "#c9d1d9"}}, "title": {"display": true, "text": "Language Breakdown", "color": "#c9d1d9"}}}};
+  if (langCfg && langCfg.type) {
+    new Chart(document.getElementById('langChart'), langCfg);
+  }
+
+  const debtCfg = {"type": "bar", "data": {"labels": ["Todo Density", "Code Staleness", "Test Coverage", "Complexity", "Dependency Freshness", "Documentation", "Dead Code"], "datasets": [{"label": "Tech Debt Score", "data": [0, 0, 0, 26, 0, 98, 0], "backgroundColor": ["#3fb950", "#3fb950", "#3fb950", "#8b949e", "#3fb950", "#f85149", "#3fb950"], "borderColor": ["#3fb950", "#3fb950", "#3fb950", "#8b949e", "#3fb950", "#f85149", "#3fb950"], "borderWidth": 1}]}, "options": {"responsive": true, "plugins": {"legend": {"display": false}, "title": {"display": true, "text": "Tech Debt by Dimension (0=clean, 100=critical)", "color": "#c9d1d9"}}, "scales": {"y": {"beginAtZero": true, "max": 100, "ticks": {"color": "#8b949e"}, "grid": {"color": "#30363d"}}, "x": {"ticks": {"color": "#8b949e"}, "grid": {"color": "#30363d"}}}}};
+  if (debtCfg && debtCfg.type) {
+    new Chart(document.getElementById('debtChart'), debtCfg);
+  }
+</script>
+
+</body>
+</html>

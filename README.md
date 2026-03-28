@@ -1,92 +1,139 @@
-# Gitopsy
+# Gitopsy — Dissect any codebase in seconds
 
-> *Dissect any codebase in seconds.*
+[![Gitopsy](https://img.shields.io/badge/gitopsy-A-44cc11)](https://github.com/UJameel/gitopsy)
+[![PyPI](https://img.shields.io/pypi/v/gitopsy)](https://pypi.org/project/gitopsy/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-![PyPI](https://img.shields.io/pypi/v/gitopsy)
+> One command. Instant codebase intelligence.
 
-Gitopsy is an open-source codebase intelligence engine that deeply analyzes any repository and produces a beautiful, interactive HTML report covering architecture, tech debt, and onboarding — everything a developer needs to understand an unfamiliar codebase.
+Gitopsy analyzes any repository and produces a **self-contained HTML report** covering architecture, tech debt, onboarding, dependencies, conventions, APIs, security surface, and setup — everything you need to understand an unfamiliar codebase.
 
-<!-- screenshot placeholder -->
-<!-- ![Gitopsy Report Screenshot](docs/examples/screenshots/overview.png) -->
-
-## Features
-
-- **Architecture Analyzer** — framework detection, project type, entry points, layer structure, dependency graph, language breakdown
-- **Tech Debt Scorer** — 7-dimension scoring (TODO density, test coverage, complexity hotspots, documentation gaps, and more)
-- **Onboarding Guide** — auto-generated "how to get started" guide from README, Makefile, contributors
-- **Beautiful HTML Report** — dark-themed, self-contained, 3-tab report with Chart.js visualizations
-- **Zero mandatory external API calls** — works completely offline
-- **Git-optional** — works on any directory; git history enables bonus features
-
-## Installation
+## Install
 
 ```bash
 pip install gitopsy
 ```
 
-Or install from source:
-
-```bash
-git clone https://github.com/gitopsy/gitopsy
-cd gitopsy
-pip install -e ".[dev]"
-```
-
 ## Usage
 
 ```bash
-# Analyze the current directory
-gitopsy .
-
-# Analyze any repository
-gitopsy /path/to/repo
-
-# Custom output path
-gitopsy . --output report.html
-
-# Run specific analyzers only
-gitopsy . --analyzers arch,debt
-
-# Output raw JSON (for piping or scripting)
-gitopsy . --json
-
-# Use as a Python module
-python -m gitopsy /path/to/repo
+gitopsy .                          # Analyze current directory
+gitopsy /path/to/repo              # Analyze any repo
+gitopsy --output report.html .     # Custom output path
+gitopsy --analyzers arch,debt .    # Run specific analyzers
+gitopsy --json .                   # Output raw JSON
+gitopsy --badge .                  # Also write a grade SVG badge
+gitopsy --save-json .              # Save JSON snapshot alongside HTML
 ```
+
+### Subcommands
+
+```bash
+# Generate a grade badge SVG
+gitopsy badge .
+gitopsy badge /path/to/repo --output my-badge.svg
+
+# Compare two JSON snapshots
+gitopsy --save-json .              # capture snapshot.json
+# ... make changes, then re-analyze ...
+gitopsy --save-json --output new.html .
+gitopsy diff gitopsy-report.json new.json --output diff-report.html
+```
+
+## What's in the report?
+
+| Tab | What it tells you |
+|-----|-------------------|
+| Architecture | Project type, framework, entry points, dependency graph |
+| Tech Debt | Score (A-F), hotspots, top 5 recommendations |
+| Onboarding | Summary, key files, setup steps, contributors, gotchas |
+| Dependencies | All deps with versions, licenses, outdated flags |
+| Conventions | Naming, formatting, import style, consistency score |
+| APIs | All HTTP routes, CLI commands, public exports |
+| Security | Secrets, SQL injection, CORS, auth patterns, risk level |
+| Setup | Prerequisites, install steps, env vars, run commands |
+
+## GitHub Action
+
+```yaml
+- uses: UJameel/gitopsy@v1
+  with:
+    path: '.'
+    output: 'gitopsy-report.html'
+```
+
+Full example workflow:
+
+```yaml
+name: Gitopsy Analysis
+on: [push]
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: UJameel/gitopsy@v1
+        with:
+          path: '.'
+          output: 'gitopsy-report.html'
+          upload-artifact: 'true'
+```
+
+The action outputs `report-path` and `overall-grade` for use in downstream steps.
 
 ## Python API
 
 ```python
 from gitopsy.orchestrator import analyze
 from gitopsy.report.renderer import render
+from gitopsy.report.badge import generate_badge
 
 report = analyze("/path/to/repo")
 render(report, "/tmp/report.html")
 
-# Or get the raw data
-print(report.architecture.framework)  # "flask"
-print(report.tech_debt.grade)         # "B"
-print(report.tech_debt.overall_score) # 35
+# Access structured data
+print(report.architecture.framework)   # "flask"
+print(report.tech_debt.grade)          # "B"
+print(report.tech_debt.overall_score)  # 72
+
+# Generate a badge
+svg = generate_badge(report.tech_debt.grade, report.tech_debt.overall_score)
 ```
 
-## Report Tabs
+## As a Claude Code skill
 
-| Tab | What you get |
-|-----|-------------|
-| **Architecture** | Project type, framework, language breakdown chart, entry points, layers, key files, internal dep graph |
-| **Tech Debt** | Overall grade (A-F), 7-dimension scoring chart, complexity hotspots, recommendations |
-| **Onboarding** | Project summary, key files to read, setup steps, test commands, contributors, gotchas |
+The `skills/gitopsy/` directory ships a Claude Code skill. Copy it to your
+`~/.claude/skills/` directory and run `/gitopsy` from any project.
+
+## Example reports
+
+Live example reports generated by Gitopsy on popular open-source projects:
+
+- [Flask](docs/examples/gitopsy-report-flask.html)
+- [FastAPI](docs/examples/gitopsy-report-fastapi.html)
+- [Gitopsy itself](docs/examples/gitopsy-self-report.html)
+
+## Design principles
+
+- **Offline-first** — zero mandatory API calls
+- **Fast** — <30s on a 10,000-file repo
+- **Self-contained** — single HTML file, no external deps to view
+- **Git-optional** — works on any directory
+- **No AI required** — all analysis is deterministic
 
 ## Development
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how to run tests and add new analyzers.
-
 ```bash
+git clone https://github.com/UJameel/gitopsy
+cd gitopsy
 pip install -e ".[dev]"
 pytest
 ```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add new analyzers.
 
 ## License
 
