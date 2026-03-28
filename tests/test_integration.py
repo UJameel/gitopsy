@@ -84,3 +84,41 @@ class TestFullPipeline:
         """Pipeline on empty directory does not raise."""
         report = analyze(str(tmp_path))
         assert report is not None
+
+    def test_full_8_tab_pipeline_flask_fixture(self, flask_app_path: Path, tmp_path: Path) -> None:
+        """Full 8-analyzer pipeline produces all 8 reports for flask-app fixture."""
+        report = analyze(str(flask_app_path))
+        assert report.architecture is not None
+        assert report.tech_debt is not None
+        assert report.onboarding is not None
+        assert report.dependencies is not None
+        assert report.conventions is not None
+        assert report.api is not None
+        assert report.security is not None
+        assert report.setup is not None
+
+    def test_security_finds_sql_injection_in_flask_fixture(self, flask_app_path: Path) -> None:
+        """Security analyzer finds SQL injection in flask-app fixture."""
+        report = analyze(str(flask_app_path), analyzers=["security"])
+        assert report.security is not None
+        categories = {f.category for f in report.security.findings}
+        assert any("sql" in c.lower() or "injection" in c.lower() for c in categories)
+
+    def test_api_extractor_finds_flask_routes(self, flask_app_path: Path) -> None:
+        """API extractor finds Flask routes in flask-app fixture."""
+        report = analyze(str(flask_app_path), analyzers=["api"])
+        assert report.api is not None
+        assert report.api.total_routes > 0
+        paths = {ep.path for ep in report.api.endpoints}
+        assert "/health" in paths
+
+    def test_html_has_all_eight_tabs(self, flask_app_path: Path, tmp_path: Path) -> None:
+        """Rendered HTML contains all 8 tab buttons."""
+        report = analyze(str(flask_app_path))
+        output = str(tmp_path / "report-8tab.html")
+        render(report, output)
+
+        html = Path(output).read_text(encoding="utf-8")
+        for tab in ["Architecture", "Tech Debt", "Onboarding", "Dependencies",
+                    "Conventions", "APIs", "Security", "Setup"]:
+            assert tab in html, f"Tab '{tab}' missing from rendered HTML"

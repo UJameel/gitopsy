@@ -9,7 +9,7 @@ from gitopsy.models.schemas import GitopsyReport
 from gitopsy.scanners.git_history import extract_git_history
 
 
-_ALL_ANALYZERS = ["arch", "debt", "onboarding"]
+_ALL_ANALYZERS = ["arch", "debt", "onboarding", "deps", "conventions", "api", "security", "setup"]
 
 
 def analyze(
@@ -21,8 +21,9 @@ def analyze(
     Args:
         repo_path: Absolute or relative path to the repository.
         analyzers: Optional list of analyzer names to run.
-                   Defaults to all: ["arch", "debt", "onboarding"].
-                   Supported: "arch", "debt", "onboarding".
+                   Defaults to all 8 analyzers.
+                   Supported: "arch", "debt", "onboarding", "deps",
+                              "conventions", "api", "security", "setup".
 
     Returns:
         A GitopsyReport containing all analyzer outputs.
@@ -53,6 +54,31 @@ def analyze(
         from gitopsy.analyzers.onboarding import analyze as onbd_analyze
         onboarding = onbd_analyze(str(root), arch_report)
 
+    dependencies = None
+    if "deps" in run:
+        from gitopsy.analyzers.dependencies import analyze as deps_analyze
+        dependencies = deps_analyze(str(root))
+
+    conventions = None
+    if "conventions" in run:
+        from gitopsy.analyzers.conventions import analyze as conv_analyze
+        conventions = conv_analyze(str(root))
+
+    api = None
+    if "api" in run:
+        from gitopsy.analyzers.api_extractor import analyze as api_analyze
+        api = api_analyze(str(root))
+
+    security = None
+    if "security" in run:
+        from gitopsy.analyzers.security_surface import analyze as sec_analyze
+        security = sec_analyze(str(root))
+
+    setup = None
+    if "setup" in run:
+        from gitopsy.analyzers.setup_guide import analyze as setup_analyze
+        setup = setup_analyze(str(root))
+
     return GitopsyReport(
         repo_path=str(root),
         project_name=project_name,
@@ -61,4 +87,9 @@ def analyze(
         architecture=arch_report,
         tech_debt=tech_debt,
         onboarding=onboarding,
+        dependencies=dependencies,
+        conventions=conventions,
+        api=api,
+        security=security,
+        setup=setup,
     )

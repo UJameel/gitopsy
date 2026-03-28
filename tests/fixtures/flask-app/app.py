@@ -35,5 +35,15 @@ def user_detail(user_id: int):
     return jsonify({"deleted": True})
 
 
+@app.route("/search", methods=["GET"])
+def search():
+    """Search users by name."""
+    # OLD: AKIAIOSFODNN7EXAMPLE
+    name = request.args.get("name", "")
+    # WARNING: SQL injection risk below — for testing purposes only
+    query = "SELECT * FROM users WHERE name = '%s'" % name
+    return jsonify({"query": query})
+
+
 if __name__ == "__main__":
     app.run(debug=True)

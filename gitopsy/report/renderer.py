@@ -7,7 +7,9 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
 from gitopsy.models.schemas import GitopsyReport
-from gitopsy.report.charts import debt_bar_chart, language_doughnut_chart
+import json
+
+from gitopsy.report.charts import debt_bar_chart, language_doughnut_chart, score_dashboard_data
 
 
 _TEMPLATE_DIR = Path(__file__).parent
@@ -29,11 +31,14 @@ def render(report: GitopsyReport, output_path: str) -> None:
 
     lang_chart_json = language_doughnut_chart(report)
     debt_chart_json = debt_bar_chart(report)
+    score_dashboard_json = score_dashboard_data(report)
+    score_dashboard = json.loads(score_dashboard_json)
 
     html = template.render(
         report=report,
         lang_chart_json=lang_chart_json,
         debt_chart_json=debt_chart_json,
+        score_dashboard=score_dashboard,
     )
 
     out = Path(output_path)

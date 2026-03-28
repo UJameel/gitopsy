@@ -131,6 +131,87 @@
 
     .container { max-width: 1200px; margin: 0 auto; padding: 0 24px 48px; }
 
+    /* ===== Score Dashboard ===== */
+    .score-dashboard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin: 24px 0 0;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .score-overall {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 80px;
+    }
+
+    .score-overall-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      font-family: var(--mono);
+      font-size: 28px;
+      font-weight: 700;
+      border: 3px solid;
+    }
+
+    .score-overall-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .score-divider {
+      width: 1px;
+      height: 60px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    .score-mini-grid {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+
+    .score-mini {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 60px;
+    }
+
+    .score-mini-circle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      border: 2px solid;
+    }
+
+    .score-mini-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
     /* ===== Tabs ===== */
     .tabs {
       display: flex;
@@ -277,6 +358,40 @@
     .pill-red    { background: rgba(248,81,73,.15);  color: var(--red); }
     .pill-blue   { background: rgba(88,166,255,.15); color: var(--accent); }
     .pill-purple { background: rgba(188,140,255,.15);color: var(--purple); }
+    .pill-gray   { background: rgba(139,148,158,.15);color: var(--text-muted); }
+
+    /* Risk banners */
+    .risk-banner {
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .risk-critical { background: rgba(248,81,73,.15);  border: 1px solid var(--red);    color: var(--red); }
+    .risk-high     { background: rgba(240,136,62,.15); border: 1px solid var(--orange); color: var(--orange); }
+    .risk-medium   { background: rgba(210,153,34,.15); border: 1px solid var(--yellow); color: var(--yellow); }
+    .risk-low      { background: rgba(63,185,80,.15);  border: 1px solid var(--green);  color: var(--green); }
+
+    /* Method badges */
+    .method-GET    { background: rgba(88,166,255,.15);  color: var(--accent);  border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+    .method-POST   { background: rgba(63,185,80,.15);   color: var(--green);   border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+    .method-PUT    { background: rgba(210,153,34,.15);  color: var(--yellow);  border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+    .method-DELETE { background: rgba(248,81,73,.15);   color: var(--red);     border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+    .method-PATCH  { background: rgba(188,140,255,.15); color: var(--purple);  border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+
+    /* Status badges */
+    .status-ok      { background: rgba(63,185,80,.15);  color: var(--green);       border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
+    .status-outdated{ background: rgba(248,81,73,.15);  color: var(--red);         border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
+    .status-unknown { background: rgba(139,148,158,.15);color: var(--text-muted);  border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
+
+    /* Severity badges */
+    .sev-critical { background: rgba(248,81,73,.15);   color: var(--red);       border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
+    .sev-high     { background: rgba(240,136,62,.15);  color: var(--orange);    border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
+    .sev-medium   { background: rgba(210,153,34,.15);  color: var(--yellow);    border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
+    .sev-low      { background: rgba(88,166,255,.15);  color: var(--accent);    border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
 
     /* ===== Details / collapsible ===== */
     details {
@@ -389,6 +504,17 @@
     }
     .rec-icon { color: var(--accent); flex-shrink: 0; }
 
+    /* ===== Prereq list ===== */
+    .prereq-list { list-style: none; }
+    .prereq-list li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .prereq-list li:last-child { border-bottom: none; }
+
     /* ===== Empty state ===== */
     .empty {
       color: var(--text-muted);
@@ -424,10 +550,40 @@
 
 <!-- ===== Main ===== -->
 <div class="container">
+
+  <!-- ===== Score Dashboard ===== -->
+  {% set dash = score_dashboard %}
+  {% if dash and dash.scores %}
+  <div class="score-dashboard">
+    <div class="score-overall">
+      <div class="score-overall-badge grade-{{ dash.overall_grade }}" style="border-color:currentColor">
+        {{ dash.overall_grade }}
+      </div>
+      <div class="score-overall-label">Overall<br>Health</div>
+    </div>
+    <div class="score-divider"></div>
+    <div class="score-mini-grid">
+      {% for key, info in dash.scores.items() %}
+      <div class="score-mini">
+        <div class="score-mini-circle grade-{{ info.grade }}" style="border-color:{{ info.color }};color:{{ info.color }}">
+          {{ info.grade }}
+        </div>
+        <div class="score-mini-label">{{ info.label }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
   <nav class="tabs">
     <button class="tab-btn active" onclick="showTab('architecture', this)">Architecture</button>
     <button class="tab-btn" onclick="showTab('tech-debt', this)">Tech Debt</button>
     <button class="tab-btn" onclick="showTab('onboarding', this)">Onboarding</button>
+    <button class="tab-btn" onclick="showTab('dependencies', this)">Dependencies</button>
+    <button class="tab-btn" onclick="showTab('conventions', this)">Conventions</button>
+    <button class="tab-btn" onclick="showTab('apis', this)">APIs</button>
+    <button class="tab-btn" onclick="showTab('security', this)">Security</button>
+    <button class="tab-btn" onclick="showTab('setup', this)">Setup</button>
   </nav>
 
   <!-- =============================== ARCHITECTURE TAB =============================== -->
@@ -822,6 +978,457 @@
 
     {% else %}
     <p class="empty">Onboarding guide not available.</p>
+    {% endif %}
+  </div>
+
+  <!-- =============================== DEPENDENCIES TAB =============================== -->
+  <div id="tab-dependencies" class="tab-panel">
+
+    {% if report.dependencies %}
+    {% set deps = report.dependencies %}
+
+    <!-- Overview cards -->
+    <div class="section">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">Package Manager</div>
+          <span class="pill pill-blue">{{ deps.package_manager }}</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Total Dependencies</div>
+          <div style="font-size:28px;font-weight:700;font-family:var(--mono)">{{ deps.total_deps }}</div>
+          <div style="color:var(--text-muted);font-size:12px">{{ deps.outdated_count }} outdated</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Risk Score</div>
+          <div style="font-size:28px;font-weight:700;font-family:var(--mono);color:{% if deps.risk_score <= 20 %}var(--green){% elif deps.risk_score <= 50 %}var(--yellow){% else %}var(--red){% endif %}">{{ deps.risk_score }}<span style="font-size:14px;color:var(--text-muted)">/100</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- License conflicts -->
+    {% if deps.license_conflicts %}
+    <div class="section">
+      <div class="section-title">License Conflicts</div>
+      <ul class="rec-list">
+        {% for conflict in deps.license_conflicts %}
+        <li>
+          <span class="rec-icon" style="color:var(--yellow)">!</span>
+          <span>{{ conflict }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <!-- Dependencies table -->
+    <div class="section">
+      <div class="section-title">All Dependencies</div>
+      <input class="search-bar" type="text" placeholder="Filter dependencies..." oninput="filterTable(this, 'deps-table')">
+      <div class="table-wrap">
+        <table id="deps-table">
+          <thead><tr><th>Name</th><th>Version</th><th>Latest</th><th>License</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for dep in deps.deps %}
+            <tr>
+              <td><strong>{{ dep.name }}</strong></td>
+              <td><code>{{ dep.current_version }}</code></td>
+              <td style="color:var(--text-muted)">{{ dep.latest_version or '—' }}</td>
+              <td style="color:var(--text-muted);font-size:12px">{{ dep.license or '—' }}</td>
+              <td>
+                {% if dep.status == 'ok' %}<span class="status-ok">up-to-date</span>
+                {% elif dep.status == 'outdated' %}<span class="status-outdated">outdated</span>
+                {% else %}<span class="status-unknown">unknown</span>{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {% else %}
+    <p class="empty">Dependency analysis not available.</p>
+    {% endif %}
+  </div>
+
+  <!-- =============================== CONVENTIONS TAB =============================== -->
+  <div id="tab-conventions" class="tab-panel">
+
+    {% if report.conventions %}
+    {% set conv = report.conventions %}
+
+    <!-- Consistency score -->
+    <div class="section">
+      <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:48px;font-weight:700;font-family:var(--mono);color:{% if conv.consistency_score >= 80 %}var(--green){% elif conv.consistency_score >= 60 %}var(--yellow){% else %}var(--red){% endif %}">
+            {{ conv.consistency_score }}<span style="font-size:18px;color:var(--text-muted)">/100</span>
+          </div>
+          <div style="color:var(--text-muted)">Consistency Score</div>
+        </div>
+        <div class="card-grid" style="flex:1;min-width:0">
+          <div class="card">
+            <div class="card-title">Import Style</div>
+            <span class="pill pill-blue">{{ conv.import_style }}</span>
+          </div>
+          <div class="card">
+            <div class="card-title">Error Handling</div>
+            <span class="pill pill-purple">{{ conv.error_handling }}</span>
+          </div>
+          <div class="card">
+            <div class="card-title">Test Pattern</div>
+            <span class="pill pill-green">{{ conv.test_pattern }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Naming conventions -->
+    <div class="section">
+      <div class="section-title">Naming Conventions</div>
+      <details open>
+        <summary>Detected Naming Patterns</summary>
+        <div class="details-content">
+          <div class="table-wrap" style="margin-top:12px">
+            <table>
+              <thead><tr><th>Category</th><th>Convention</th></tr></thead>
+              <tbody>
+                <tr><td>Variables</td><td>{% if conv.naming.variables %}<span class="pill pill-blue">{{ conv.naming.variables }}</span>{% else %}<span style="color:var(--text-muted)">—</span>{% endif %}</td></tr>
+                <tr><td>Functions</td><td>{% if conv.naming.functions %}<span class="pill pill-blue">{{ conv.naming.functions }}</span>{% else %}<span style="color:var(--text-muted)">—</span>{% endif %}</td></tr>
+                <tr><td>Classes</td><td>{% if conv.naming.classes %}<span class="pill pill-purple">{{ conv.naming.classes }}</span>{% else %}<span style="color:var(--text-muted)">—</span>{% endif %}</td></tr>
+                <tr><td>Files</td><td>{% if conv.naming.files %}<span class="pill pill-green">{{ conv.naming.files }}</span>{% else %}<span style="color:var(--text-muted)">—</span>{% endif %}</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- Formatting -->
+    <div class="section">
+      <div class="section-title">Formatting Rules</div>
+      <details open>
+        <summary>Detected Formatting</summary>
+        <div class="details-content">
+          <div class="table-wrap" style="margin-top:12px">
+            <table>
+              <thead><tr><th>Rule</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td>Indent Style</td><td>{% if conv.formatting.indent_style %}<span class="pill pill-blue">{{ conv.formatting.indent_style }}</span>{% else %}<span style="color:var(--text-muted)">—</span>{% endif %}</td></tr>
+                <tr><td>Indent Width</td><td>{% if conv.formatting.indent_width %}<code>{{ conv.formatting.indent_width }}</code>{% else %}<span style="color:var(--text-muted)">—</span>{% endif %}</td></tr>
+                <tr><td>Quotes</td><td>{% if conv.formatting.quotes %}<span class="pill pill-purple">{{ conv.formatting.quotes }}</span>{% else %}<span style="color:var(--text-muted)">—</span>{% endif %}</td></tr>
+                <tr><td>Semicolons</td><td>{% if conv.formatting.semicolons is not none %}<span class="pill {% if conv.formatting.semicolons %}pill-green{% else %}pill-orange{% endif %}">{{ conv.formatting.semicolons }}</span>{% else %}<span style="color:var(--text-muted)">—</span>{% endif %}</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- Git conventions -->
+    <div class="section">
+      <div class="section-title">Git Conventions</div>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">Commit Format</div>
+          {% if conv.git_conventions.commit_format %}<span class="pill pill-blue">{{ conv.git_conventions.commit_format }}</span>{% else %}<span style="color:var(--text-muted)">Not detected</span>{% endif %}
+        </div>
+        {% if conv.linter_config %}
+        <div class="card">
+          <div class="card-title">Linter Config</div>
+          <code>{{ conv.linter_config }}</code>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% else %}
+    <p class="empty">Convention analysis not available.</p>
+    {% endif %}
+  </div>
+
+  <!-- =============================== APIs TAB =============================== -->
+  <div id="tab-apis" class="tab-panel">
+
+    {% if report.api %}
+    {% set api = report.api %}
+
+    <!-- Overview -->
+    <div class="section">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">API Type</div>
+          <span class="pill pill-blue">{{ api.api_type }}</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Total Routes</div>
+          <div style="font-size:28px;font-weight:700;font-family:var(--mono)">{{ api.total_routes }}</div>
+          <div style="color:var(--text-muted);font-size:12px">{{ api.undocumented_routes }} undocumented</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HTTP Endpoints -->
+    {% if api.endpoints %}
+    <div class="section">
+      <div class="section-title">HTTP Endpoints</div>
+      <input class="search-bar" type="text" placeholder="Filter endpoints..." oninput="filterTable(this, 'endpoints-table')">
+      <div class="table-wrap">
+        <table id="endpoints-table">
+          <thead><tr><th>Method</th><th>Path</th><th>Handler</th></tr></thead>
+          <tbody>
+            {% for ep in api.endpoints %}
+            <tr>
+              <td><span class="method-{{ ep.method }}">{{ ep.method }}</span></td>
+              <td><code>{{ ep.path }}</code></td>
+              <td style="color:var(--text-muted);font-size:12px">{{ ep.handler_file }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- CLI Commands -->
+    {% if api.cli_commands %}
+    <div class="section">
+      <div class="section-title">CLI Commands</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Command</th><th>Description</th><th>Handler</th></tr></thead>
+          <tbody>
+            {% for cmd in api.cli_commands %}
+            <tr>
+              <td><code>{{ cmd.name }}</code></td>
+              <td style="color:var(--text-muted)">{{ cmd.description or '—' }}</td>
+              <td style="color:var(--text-muted);font-size:12px">{{ cmd.handler_file }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <p class="empty">API analysis not available.</p>
+    {% endif %}
+  </div>
+
+  <!-- =============================== SECURITY TAB =============================== -->
+  <div id="tab-security" class="tab-panel">
+
+    {% if report.security %}
+    {% set sec = report.security %}
+
+    <!-- Risk banner -->
+    <div class="risk-banner risk-{{ sec.risk_level }}">
+      <span style="font-size:18px">{% if sec.risk_level == 'critical' %}&#9888;{% elif sec.risk_level == 'high' %}&#9888;{% elif sec.risk_level == 'medium' %}&#8505;{% else %}&#10003;{% endif %}</span>
+      <span>Risk Level: <strong>{{ sec.risk_level | upper }}</strong>
+        {% if sec.secrets_found > 0 %} · {{ sec.secrets_found }} secret(s) found{% endif %}
+      </span>
+    </div>
+
+    <!-- Overview cards -->
+    <div class="section">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">Auth Pattern</div>
+          {% if sec.auth_pattern %}<span class="pill pill-blue">{{ sec.auth_pattern }}</span>{% else %}<span style="color:var(--text-muted)">None detected</span>{% endif %}
+        </div>
+        {% if sec.exposed_ports %}
+        <div class="card">
+          <div class="card-title">Exposed Ports</div>
+          {% for port in sec.exposed_ports %}<span class="pill pill-yellow" style="margin-right:4px">{{ port }}</span>{% endfor %}
+        </div>
+        {% endif %}
+        <div class="card">
+          <div class="card-title">Findings</div>
+          <div style="font-size:28px;font-weight:700;font-family:var(--mono)">{{ sec.findings | length }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Findings table -->
+    {% if sec.findings %}
+    <div class="section">
+      <div class="section-title">Security Findings</div>
+      <input class="search-bar" type="text" placeholder="Filter findings..." oninput="filterTable(this, 'findings-table')">
+      <div class="table-wrap">
+        <table id="findings-table">
+          <thead><tr><th>Severity</th><th>Category</th><th>File</th><th>Line</th><th>Description</th></tr></thead>
+          <tbody>
+            {% for finding in sec.findings %}
+            <tr>
+              <td><span class="sev-{{ finding.severity }}">{{ finding.severity }}</span></td>
+              <td><code style="font-size:11px">{{ finding.category }}</code></td>
+              <td style="color:var(--text-muted);font-size:12px">{{ finding.file }}</td>
+              <td style="color:var(--text-muted)">{{ finding.line or '—' }}</td>
+              <td style="font-size:12px">{{ finding.description }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <div class="section">
+      <p style="color:var(--green)">&#10003; No security findings detected.</p>
+    </div>
+    {% endif %}
+
+    <!-- Recommendations -->
+    {% if sec.recommendations %}
+    <div class="section">
+      <div class="section-title">Recommendations</div>
+      <ul class="rec-list">
+        {% for rec in sec.recommendations %}
+        <li>
+          <span class="rec-icon">→</span>
+          <span>{{ rec }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <p class="empty">Security analysis not available.</p>
+    {% endif %}
+  </div>
+
+  <!-- =============================== SETUP TAB =============================== -->
+  <div id="tab-setup" class="tab-panel">
+
+    {% if report.setup %}
+    {% set setup = report.setup %}
+
+    <!-- Prerequisites -->
+    {% if setup.prerequisites %}
+    <div class="section">
+      <div class="section-title">Prerequisites</div>
+      <ul class="prereq-list">
+        {% for prereq in setup.prerequisites %}
+        <li>
+          <span class="pill pill-blue">{{ prereq.name }}</span>
+          {% if prereq.version %}<code style="font-size:12px">{{ prereq.version }}</code>{% endif %}
+          {% if prereq.install_url %}<span style="font-size:12px;color:var(--text-muted)">{{ prereq.install_url }}</span>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <!-- Install steps -->
+    {% if setup.install_steps %}
+    <div class="section">
+      <div class="section-title">Installation</div>
+      <ol class="step-list">
+        {% for step in setup.install_steps %}
+        <li>
+          <div class="step-content">
+            <div class="step-desc">{{ step.description }}</div>
+            {% if step.command %}
+            <pre><code>{{ step.command }}</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            {% endif %}
+          </div>
+        </li>
+        {% endfor %}
+      </ol>
+    </div>
+    {% endif %}
+
+    <!-- Environment variables -->
+    {% if setup.env_vars %}
+    <div class="section">
+      <div class="section-title">Environment Variables</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Required</th><th>Description</th><th>Example</th></tr></thead>
+          <tbody>
+            {% for ev in setup.env_vars %}
+            <tr>
+              <td><code>{{ ev.name }}</code></td>
+              <td>{% if ev.required %}<span class="pill pill-red">required</span>{% else %}<span class="pill pill-gray">optional</span>{% endif %}</td>
+              <td style="color:var(--text-muted);font-size:12px">{{ ev.description or '—' }}</td>
+              <td><code style="font-size:12px;color:var(--text-muted)">{{ ev.example or '—' }}</code></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Run commands -->
+    {% if setup.run_commands %}
+    <div class="section">
+      <div class="section-title">Run Commands</div>
+      {% for label, cmd in setup.run_commands.items() %}
+      <details>
+        <summary><span class="pill pill-green">{{ label }}</span></summary>
+        <div class="details-content" style="padding-top:10px">
+          <pre><code>{{ cmd }}</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+        </div>
+      </details>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Test command -->
+    {% if setup.test_command %}
+    <div class="section">
+      <div class="section-title">Test Command</div>
+      <pre><code>{{ setup.test_command }}</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+    </div>
+    {% endif %}
+
+    <!-- Build command -->
+    {% if setup.build_command %}
+    <div class="section">
+      <div class="section-title">Build Command</div>
+      <pre><code>{{ setup.build_command }}</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+    </div>
+    {% endif %}
+
+    <!-- Database setup -->
+    {% if setup.database_setup %}
+    <div class="section">
+      <div class="section-title">Database Setup</div>
+      <ol class="step-list">
+        {% for step in setup.database_setup %}
+        <li>
+          <div class="step-content">
+            <div class="step-desc">{{ step.description }}</div>
+            {% if step.command %}
+            <pre><code>{{ step.command }}</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            {% endif %}
+          </div>
+        </li>
+        {% endfor %}
+      </ol>
+    </div>
+    {% endif %}
+
+    <!-- Common issues -->
+    {% if setup.common_issues %}
+    <div class="section">
+      <div class="section-title">Common Issues</div>
+      {% for issue in setup.common_issues %}
+      <details>
+        <summary>{{ issue.description }}</summary>
+        <div class="details-content" style="color:var(--text-muted);padding-top:8px">
+          {{ issue.solution }}
+        </div>
+      </details>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <p class="empty">Setup guide not available.</p>
     {% endif %}
   </div>
 
