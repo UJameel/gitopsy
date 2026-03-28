@@ -1,0 +1,1 @@
+"""Gitopsy data models."""

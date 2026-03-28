@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gitopsy Report — {{ report.project_name }}</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    /* ===== CSS Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --orange: #f0883e;
+      --red: #f85149;
+      --purple: #bc8cff;
+      --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    code, pre {
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
+    pre {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 16px;
+      overflow-x: auto;
+      position: relative;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 11px;
+      padding: 3px 8px;
+    }
+    .copy-btn:hover { color: var(--text); }
+
+    /* ===== Layout ===== */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .header-left h1 {
+      font-family: var(--mono);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .header-left .subtitle {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 3px 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .grade-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      font-family: var(--mono);
+      font-size: 22px;
+      font-weight: 700;
+      border: 3px solid;
+    }
+
+    .grade-A { color: var(--green); border-color: var(--green); }
+    .grade-B { color: #56d364; border-color: #56d364; }
+    .grade-C { color: var(--yellow); border-color: var(--yellow); }
+    .grade-D { color: var(--orange); border-color: var(--orange); }
+    .grade-F { color: var(--red); border-color: var(--red); }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px 48px; }
+
+    /* ===== Tabs ===== */
+    .tabs {
+      display: flex;
+      gap: 2px;
+      border-bottom: 1px solid var(--border);
+      margin: 24px 0 0;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: var(--sans);
+      font-size: 14px;
+      padding: 10px 16px;
+      transition: color 0.15s;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active {
+      color: var(--text);
+      border-bottom-color: var(--accent);
+    }
+
+    .tab-panel { display: none; padding: 24px 0; }
+    .tab-panel.active { display: block; }
+
+    /* ===== Section headers ===== */
+    .section { margin-bottom: 32px; }
+    .section-title {
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    /* ===== Tables ===== */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      background: var(--surface2);
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface2); }
+
+    /* Search bar */
+    .search-bar {
+      width: 100%;
+      max-width: 400px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 13px;
+      padding: 7px 12px;
+      margin-bottom: 12px;
+      outline: none;
+    }
+    .search-bar:focus { border-color: var(--accent); }
+
+    /* ===== Cards ===== */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    /* ===== Score bar ===== */
+    .score-bar-wrap { margin: 6px 0; }
+    .score-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 3px;
+    }
+    .score-bar-track {
+      background: var(--surface2);
+      border-radius: 3px;
+      height: 6px;
+      overflow: hidden;
+    }
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    /* ===== Pills / Badges ===== */
+    .pill {
+      display: inline-block;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+    }
+    .pill-green  { background: rgba(63,185,80,.15);  color: var(--green); }
+    .pill-yellow { background: rgba(210,153,34,.15); color: var(--yellow); }
+    .pill-orange { background: rgba(240,136,62,.15); color: var(--orange); }
+    .pill-red    { background: rgba(248,81,73,.15);  color: var(--red); }
+    .pill-blue   { background: rgba(88,166,255,.15); color: var(--accent); }
+    .pill-purple { background: rgba(188,140,255,.15);color: var(--purple); }
+
+    /* ===== Details / collapsible ===== */
+    details {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    summary {
+      cursor: pointer;
+      padding: 10px 14px;
+      font-weight: 600;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::before {
+      content: '▶';
+      font-size: 10px;
+      color: var(--text-muted);
+      transition: transform 0.15s;
+    }
+    details[open] > summary::before { transform: rotate(90deg); }
+    .details-content { padding: 0 14px 14px; }
+
+    /* ===== File tree ===== */
+    .file-tree {
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.8;
+    }
+    .file-tree ul { list-style: none; padding-left: 16px; }
+    .file-tree li { color: var(--text-muted); }
+    .file-tree li.dir { color: var(--accent); font-weight: 600; }
+
+    /* ===== Hotspot table score ===== */
+    .score-num {
+      font-family: var(--mono);
+      font-weight: 700;
+    }
+
+    /* ===== Step list ===== */
+    .step-list { list-style: none; counter-reset: step; }
+    .step-list li {
+      counter-increment: step;
+      display: flex;
+      gap: 14px;
+      margin-bottom: 16px;
+      align-items: flex-start;
+    }
+    .step-list li::before {
+      content: counter(step);
+      background: var(--accent);
+      color: var(--bg);
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 12px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .step-content { flex: 1; }
+    .step-desc { margin-bottom: 6px; }
+
+    /* ===== Charts ===== */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 700px) {
+      .charts-row { grid-template-columns: 1fr; }
+    }
+    .chart-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      max-height: 320px;
+    }
+
+    /* ===== Gotcha list ===== */
+    .gotcha-list { list-style: none; }
+    .gotcha-list li {
+      display: flex;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .gotcha-list li:last-child { border-bottom: none; }
+    .gotcha-icon { color: var(--yellow); font-size: 16px; flex-shrink: 0; }
+
+    /* ===== Recommendations ===== */
+    .rec-list { list-style: none; }
+    .rec-list li {
+      display: flex;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    .rec-icon { color: var(--accent); flex-shrink: 0; }
+
+    /* ===== Empty state ===== */
+    .empty {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 16px 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== Header ===== -->
+<header class="header">
+  <div class="header-left">
+    <h1>gitopsy / {{ report.project_name }}</h1>
+    <div class="subtitle">
+      Generated {{ report.generated_at[:19].replace('T', ' ') }} UTC
+      {% if report.git_commit %} · commit {{ report.git_commit }}{% endif %}
+    </div>
+  </div>
+  <div class="header-right">
+    {% if report.tech_debt %}
+    <div class="grade-badge grade-{{ report.tech_debt.grade }}">{{ report.tech_debt.grade }}</div>
+    {% endif %}
+    {% if report.architecture %}
+    <div class="badge">{{ report.architecture.total_files }} files</div>
+    <div class="badge">{{ '{:,}'.format(report.architecture.total_lines) }} lines</div>
+    {% if report.architecture.framework %}
+    <div class="badge">{{ report.architecture.framework }}</div>
+    {% endif %}
+    {% endif %}
+  </div>
+</header>
+
+<!-- ===== Main ===== -->
+<div class="container">
+  <nav class="tabs">
+    <button class="tab-btn active" onclick="showTab('architecture', this)">Architecture</button>
+    <button class="tab-btn" onclick="showTab('tech-debt', this)">Tech Debt</button>
+    <button class="tab-btn" onclick="showTab('onboarding', this)">Onboarding</button>
+  </nav>
+
+  <!-- =============================== ARCHITECTURE TAB =============================== -->
+  <div id="tab-architecture" class="tab-panel active">
+
+    {% if report.architecture %}
+    {% set arch = report.architecture %}
+
+    <!-- Overview cards -->
+    <div class="section">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">Project Type</div>
+          <span class="pill pill-blue">{{ arch.project_type }}</span>
+          {% if arch.framework %}
+          <span class="pill pill-purple" style="margin-left:6px">{{ arch.framework }}</span>
+          {% endif %}
+        </div>
+        <div class="card">
+          <div class="card-title">Structure Pattern</div>
+          <span class="pill pill-green">{{ arch.structure_pattern }}</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Codebase Size</div>
+          <div style="font-size:22px;font-weight:700;font-family:var(--mono)">{{ arch.total_files }}</div>
+          <div style="color:var(--text-muted);font-size:12px">files · {{ '{:,}'.format(arch.total_lines) }} lines</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Language breakdown + chart -->
+    <div class="section">
+      <div class="section-title">Language Breakdown</div>
+      <div style="display:grid;grid-template-columns:1fr 280px;gap:24px;align-items:start">
+        <div>
+          {% for lang, pct in arch.language_breakdown.items() | sort(attribute='1', reverse=True) %}
+          <div class="score-bar-wrap">
+            <div class="score-bar-label">
+              <span>{{ lang }}</span>
+              <span>{{ "%.1f"|format(pct) }}%</span>
+            </div>
+            <div class="score-bar-track">
+              <div class="score-bar-fill" style="width:{{ pct }}%;background:var(--accent)"></div>
+            </div>
+          </div>
+          {% endfor %}
+          {% if not arch.language_breakdown %}
+          <p class="empty">No language data available.</p>
+          {% endif %}
+        </div>
+        <div class="chart-box" style="max-height:280px">
+          <canvas id="langChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Entry points -->
+    {% if arch.entry_points %}
+    <div class="section">
+      <div class="section-title">Entry Points</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>File</th><th>Type</th></tr></thead>
+          <tbody>
+            {% for ep in arch.entry_points %}
+            <tr>
+              <td><code>{{ ep.path }}</code></td>
+              <td><span class="pill pill-blue">{{ ep.entry_type }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Key files -->
+    {% if arch.key_files %}
+    <div class="section">
+      <div class="section-title">Key Files</div>
+      <input class="search-bar" type="text" placeholder="Filter key files..." oninput="filterTable(this, 'key-files-table')">
+      <div class="table-wrap">
+        <table id="key-files-table">
+          <thead><tr><th>File</th><th>Role</th><th>Importance</th></tr></thead>
+          <tbody>
+            {% for kf in arch.key_files %}
+            <tr>
+              <td><code>{{ kf.path }}</code></td>
+              <td>{{ kf.role }}</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill" style="width:{{ kf.importance_score }}%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="score-num" style="font-size:11px;color:var(--text-muted)">{{ kf.importance_score }}</span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Layers -->
+    {% if arch.layers %}
+    <div class="section">
+      <div class="section-title">Detected Layers</div>
+      {% for layer in arch.layers %}
+      <details>
+        <summary>
+          <span class="pill pill-purple">{{ layer.name }}</span>
+          <span style="color:var(--text-muted);font-size:12px;font-weight:400">{{ layer.purpose }} · {{ layer.files | length }} files</span>
+        </summary>
+        <div class="details-content">
+          <div class="file-tree">
+            <ul>
+              {% for f in layer.files %}
+              <li><code>{{ f }}</code></li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </details>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Internal deps -->
+    {% if arch.internal_deps %}
+    <div class="section">
+      <div class="section-title">Internal Dependencies</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>From</th><th>Imports</th></tr></thead>
+          <tbody>
+            {% for dep in arch.internal_deps[:30] %}
+            <tr>
+              <td><code>{{ dep.from_module }}</code></td>
+              <td><code>{{ dep.to_module }}</code></td>
+            </tr>
+            {% endfor %}
+            {% if arch.internal_deps | length > 30 %}
+            <tr>
+              <td colspan="2" style="color:var(--text-muted);text-align:center">
+                … and {{ (arch.internal_deps | length) - 30 }} more
+              </td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <p class="empty">Architecture analysis not available.</p>
+    {% endif %}
+  </div>
+
+  <!-- =============================== TECH DEBT TAB =============================== -->
+  <div id="tab-tech-debt" class="tab-panel">
+
+    {% if report.tech_debt %}
+    {% set debt = report.tech_debt %}
+
+    <!-- Score header -->
+    <div class="section">
+      <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+        <div class="grade-badge grade-{{ debt.grade }}" style="width:80px;height:80px;font-size:36px">{{ debt.grade }}</div>
+        <div>
+          <div style="font-size:32px;font-weight:700;font-family:var(--mono)">{{ debt.overall_score }}<span style="font-size:16px;color:var(--text-muted)">/100</span></div>
+          <div style="color:var(--text-muted)">Overall Tech Debt Score — lower is better</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="charts-row">
+      <div class="chart-box">
+        <canvas id="debtChart"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">Dimension Scores</div>
+        {% for key, dim in debt.dimensions.items() %}
+        <div class="score-bar-wrap">
+          <div class="score-bar-label">
+            <span>{{ key.replace('_', ' ').title() }}</span>
+            <span class="score-num">{{ dim.score }}</span>
+          </div>
+          <div class="score-bar-track">
+            <div class="score-bar-fill" style="width:{{ dim.score }}%;background:{% if dim.score <= 20 %}var(--green){% elif dim.score <= 40 %}#56d364{% elif dim.score <= 60 %}var(--yellow){% elif dim.score <= 80 %}var(--orange){% else %}var(--red){% endif %}"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Dimension details table -->
+    <div class="section">
+      <div class="section-title">Dimension Details</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Dimension</th><th>Score</th><th>Weight</th><th>Detail</th></tr></thead>
+          <tbody>
+            {% for key, dim in debt.dimensions.items() %}
+            <tr>
+              <td><strong>{{ key.replace('_', ' ').title() }}</strong></td>
+              <td>
+                <span class="score-num {% if dim.score <= 20 %}" style="color:var(--green){% elif dim.score <= 40 %}" style="color:#56d364{% elif dim.score <= 60 %}" style="color:var(--yellow){% elif dim.score <= 80 %}" style="color:var(--orange){% else %}" style="color:var(--red){% endif %}">{{ dim.score }}</span>
+              </td>
+              <td style="color:var(--text-muted)">{{ "%.0f"|format(dim.weight * 100) }}%</td>
+              <td style="color:var(--text-muted);font-size:12px">{{ dim.detail }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Hotspots -->
+    {% if debt.hotspots %}
+    <div class="section">
+      <div class="section-title">Hotspots</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>File</th><th>Score</th><th>Reasons</th></tr></thead>
+          <tbody>
+            {% for hs in debt.hotspots %}
+            <tr>
+              <td><code>{{ hs.path }}</code></td>
+              <td><span class="score-num" style="color:var(--red)">{{ hs.score }}</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">
+                {% for r in hs.reasons %}{{ r }}{% if not loop.last %} · {% endif %}{% endfor %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Recommendations -->
+    {% if debt.recommendations %}
+    <div class="section">
+      <div class="section-title">Recommendations</div>
+      <ul class="rec-list">
+        {% for rec in debt.recommendations %}
+        <li>
+          <span class="rec-icon">→</span>
+          <span>{{ rec }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <p class="empty">Tech debt analysis not available.</p>
+    {% endif %}
+  </div>
+
+  <!-- =============================== ONBOARDING TAB =============================== -->
+  <div id="tab-onboarding" class="tab-panel">
+
+    {% if report.onboarding %}
+    {% set ob = report.onboarding %}
+
+    <!-- Project summary -->
+    <div class="section">
+      <div class="section-title">What Is This Project?</div>
+      <div class="card">
+        <p>{{ ob.project_summary }}</p>
+      </div>
+      {% if ob.architecture_overview %}
+      <div class="card">
+        <div class="card-title">Architecture Overview</div>
+        <p style="color:var(--text-muted)">{{ ob.architecture_overview }}</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Key files to read first -->
+    {% if ob.key_files %}
+    <div class="section">
+      <div class="section-title">Key Files to Read First</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>File</th><th>Role</th></tr></thead>
+          <tbody>
+            {% for kf in ob.key_files[:10] %}
+            <tr>
+              <td style="color:var(--text-muted)">{{ loop.index }}</td>
+              <td><code>{{ kf.path }}</code></td>
+              <td>{{ kf.role }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Setup steps -->
+    <div class="section">
+      <div class="section-title">How to Run Locally</div>
+      {% if ob.setup_steps %}
+      <ol class="step-list">
+        {% for step in ob.setup_steps %}
+        <li>
+          <div class="step-content">
+            <div class="step-desc">{{ step.description }}</div>
+            {% if step.command %}
+            <pre><code>{{ step.command }}</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+            {% endif %}
+          </div>
+        </li>
+        {% endfor %}
+      </ol>
+      {% else %}
+      <p class="empty">No setup steps detected. Check the README manually.</p>
+      {% endif %}
+    </div>
+
+    <!-- Test commands -->
+    {% if ob.test_commands %}
+    <div class="section">
+      <div class="section-title">How to Run Tests</div>
+      {% for cmd in ob.test_commands %}
+      <pre><code>{{ cmd }}</code><button class="copy-btn" onclick="copyCode(this)">copy</button></pre>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Contributors -->
+    {% if ob.top_contributors %}
+    <div class="section">
+      <div class="section-title">Who to Ask</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Recent Commits</th></tr></thead>
+          <tbody>
+            {% for c in ob.top_contributors %}
+            <tr>
+              <td><strong>{{ c.name }}</strong></td>
+              <td style="color:var(--text-muted)">{{ c.email }}</td>
+              <td>{{ c.recent_commits }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Gotchas -->
+    {% if ob.gotchas %}
+    <div class="section">
+      <div class="section-title">Gotchas</div>
+      <ul class="gotcha-list">
+        {% for gotcha in ob.gotchas %}
+        <li>
+          <span class="gotcha-icon">⚠</span>
+          <span>{{ gotcha }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <!-- Glossary -->
+    {% if ob.glossary %}
+    <div class="section">
+      <div class="section-title">Project Terms</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Term</th><th>Value</th></tr></thead>
+          <tbody>
+            {% for term, value in ob.glossary.items() %}
+            <tr>
+              <td><code>{{ term }}</code></td>
+              <td style="color:var(--text-muted)">{{ value }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <p class="empty">Onboarding guide not available.</p>
+    {% endif %}
+  </div>
+
+</div><!-- /container -->
+
+<script>
+  // ===== Tab switching =====
+  function showTab(name, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // ===== Table filter =====
+  function filterTable(input, tableId) {
+    const filter = input.value.toLowerCase();
+    const rows = document.getElementById(tableId).querySelectorAll('tbody tr');
+    rows.forEach(row => {
+      row.style.display = row.textContent.toLowerCase().includes(filter) ? '' : 'none';
+    });
+  }
+
+  // ===== Copy to clipboard =====
+  function copyCode(btn) {
+    const code = btn.previousElementSibling.textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      btn.textContent = 'copied!';
+      setTimeout(() => { btn.textContent = 'copy'; }, 2000);
+    });
+  }
+
+  // ===== Charts =====
+  Chart.defaults.color = '#8b949e';
+  Chart.defaults.borderColor = '#30363d';
+
+  const langCfg = {{ lang_chart_json | safe }};
+  if (langCfg && langCfg.type) {
+    new Chart(document.getElementById('langChart'), langCfg);
+  }
+
+  const debtCfg = {{ debt_chart_json | safe }};
+  if (debtCfg && debtCfg.type) {
+    new Chart(document.getElementById('debtChart'), debtCfg);
+  }
+</script>
+
+</body>
+</html>

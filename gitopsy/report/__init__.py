@@ -1,0 +1,1 @@
+"""Gitopsy HTML report generation."""
