@@ -1,0 +1,56 @@
+name: 'Gitopsy — Codebase Intelligence Report'
+description: 'Analyze any repository and produce a beautiful HTML intelligence report'
+author: 'UJameel'
+
+inputs:
+  path:
+    description: 'Path to the repository to analyze'
+    required: false
+    default: '.'
+  output:
+    description: 'Output path for the HTML report'
+    required: false
+    default: 'gitopsy-report.html'
+  analyzers:
+    description: 'Comma-separated list of analyzers to run (default: all)'
+    required: false
+    default: ''
+  upload-artifact:
+    description: 'Upload report as a GitHub Actions artifact'
+    required: false
+    default: 'true'
+
+outputs:
+  report-path:
+    description: 'Path to the generated HTML report'
+    value: ${{ steps.analyze.outputs.report-path }}
+  overall-grade:
+    description: 'Overall health grade (A/B/C/D/F)'
+    value: ${{ steps.analyze.outputs.overall-grade }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install gitopsy
+      shell: bash
+      run: pip install gitopsy
+
+    - name: Analyze repository
+      id: analyze
+      shell: bash
+      run: |
+        ANALYZERS_FLAG=""
+        if [ -n "${{ inputs.analyzers }}" ]; then
+          ANALYZERS_FLAG="--analyzers ${{ inputs.analyzers }}"
+        fi
+        gitopsy ${{ inputs.path }} --output ${{ inputs.output }} $ANALYZERS_FLAG
+        echo "report-path=${{ inputs.output }}" >> $GITHUB_OUTPUT
+        GRADE=$(gitopsy ${{ inputs.path }} --json | python -c "import sys,json; d=json.load(sys.stdin); print(d.get('tech_debt',{}).get('grade','N/A'))" 2>/dev/null || echo "N/A")
+        echo "overall-grade=$GRADE" >> $GITHUB_OUTPUT
+
+    - name: Upload report artifact
+      if: inputs.upload-artifact == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: gitopsy-report
+        path: ${{ inputs.output }}
