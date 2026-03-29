@@ -75,6 +75,7 @@
       font-size: 14px;
       line-height: 1.6;
       min-height: 100vh;
+      overflow-x: hidden;
     }
 
     a { color: var(--accent); text-decoration: none; }
@@ -1570,9 +1571,9 @@
     Chart.defaults.borderColor = c.border;
     [window.langChart, window.debtChart].forEach(function(chart) {
       if (!chart) return;
-      chart.options.plugins.tooltip = chart.options.plugins.tooltip || {};
-      chart.options.plugins.tooltip.backgroundColor = c.surface2;
-      chart.options.plugins.tooltip.bodyColor = c.text;
+      chart.config.options.plugins.tooltip = chart.config.options.plugins.tooltip || {};
+      chart.config.options.plugins.tooltip.backgroundColor = c.surface2;
+      chart.config.options.plugins.tooltip.bodyColor = c.text;
       chart.update('none');
     });
   }
