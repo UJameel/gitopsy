@@ -4,7 +4,29 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gitopsy Report — {{ report.project_name }}</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script>
+    (function() {
+      try {
+        var t = localStorage.getItem('gitopsy-theme');
+        if (t === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+        } else if (t === 'system' || !t) {
+          if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+            document.documentElement.setAttribute('data-theme', 'light');
+          }
+        } else if (t === 'dark') {
+          document.documentElement.removeAttribute('data-theme');
+        }
+      } catch(e) {
+        try {
+          if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+            document.documentElement.setAttribute('data-theme', 'light');
+          }
+        } catch(e2) {}
+      }
+    })();
+  </script>
+  <script>{{ chartjs_source | safe }}</script>
   <style>
     /* ===== CSS Reset & Base ===== */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -88,7 +110,12 @@
 
     /* ===== Layout ===== */
     .header {
-      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(22, 27, 34, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
       padding: 16px 24px;
       display: flex;
@@ -96,6 +123,11 @@
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 8px;
+      transition: background 0.15s;
+    }
+
+    [data-theme='light'] .header {
+      background: rgba(255, 255, 255, 0.8);
     }
 
     .header-left h1 {
@@ -165,11 +197,26 @@
     }
 
     .score-overall {
+      position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 4px;
       min-width: 80px;
+    }
+
+    .score-overall::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 120%;
+      height: 120%;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(63, 185, 80, 0.15) 0%, transparent 70%);
+      z-index: -1;
+      pointer-events: none;
     }
 
     .score-overall-badge {
@@ -372,13 +419,13 @@
       font-weight: 600;
       padding: 2px 8px;
     }
-    .pill-green  { background: rgba(63,185,80,.15);  color: var(--green); }
-    .pill-yellow { background: rgba(210,153,34,.15); color: var(--yellow); }
-    .pill-orange { background: rgba(240,136,62,.15); color: var(--orange); }
-    .pill-red    { background: rgba(248,81,73,.15);  color: var(--red); }
-    .pill-blue   { background: rgba(88,166,255,.15); color: var(--accent); }
-    .pill-purple { background: rgba(188,140,255,.15);color: var(--purple); }
-    .pill-gray   { background: rgba(139,148,158,.15);color: var(--text-muted); }
+    .pill-green  { background: color-mix(in srgb, var(--green) 15%, transparent);  color: var(--green); }
+    .pill-yellow { background: color-mix(in srgb, var(--yellow) 15%, transparent); color: var(--yellow); }
+    .pill-orange { background: color-mix(in srgb, var(--orange) 15%, transparent); color: var(--orange); }
+    .pill-red    { background: color-mix(in srgb, var(--red) 15%, transparent);  color: var(--red); }
+    .pill-blue   { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
+    .pill-purple { background: color-mix(in srgb, var(--purple) 15%, transparent);color: var(--purple); }
+    .pill-gray   { background: color-mix(in srgb, var(--text-muted) 15%, transparent);color: var(--text-muted); }
 
     /* Risk banners */
     .risk-banner {
@@ -390,28 +437,28 @@
       align-items: center;
       gap: 10px;
     }
-    .risk-critical { background: rgba(248,81,73,.15);  border: 1px solid var(--red);    color: var(--red); }
-    .risk-high     { background: rgba(240,136,62,.15); border: 1px solid var(--orange); color: var(--orange); }
-    .risk-medium   { background: rgba(210,153,34,.15); border: 1px solid var(--yellow); color: var(--yellow); }
-    .risk-low      { background: rgba(63,185,80,.15);  border: 1px solid var(--green);  color: var(--green); }
+    .risk-critical { background: color-mix(in srgb, var(--red) 15%, transparent);  border: 1px solid var(--red);    color: var(--red); }
+    .risk-high     { background: color-mix(in srgb, var(--orange) 15%, transparent); border: 1px solid var(--orange); color: var(--orange); }
+    .risk-medium   { background: color-mix(in srgb, var(--yellow) 15%, transparent); border: 1px solid var(--yellow); color: var(--yellow); }
+    .risk-low      { background: color-mix(in srgb, var(--green) 15%, transparent);  border: 1px solid var(--green);  color: var(--green); }
 
     /* Method badges */
-    .method-GET    { background: rgba(88,166,255,.15);  color: var(--accent);  border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
-    .method-POST   { background: rgba(63,185,80,.15);   color: var(--green);   border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
-    .method-PUT    { background: rgba(210,153,34,.15);  color: var(--yellow);  border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
-    .method-DELETE { background: rgba(248,81,73,.15);   color: var(--red);     border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
-    .method-PATCH  { background: rgba(188,140,255,.15); color: var(--purple);  border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+    .method-GET    { background: color-mix(in srgb, var(--accent) 15%, transparent);  color: var(--accent);  border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+    .method-POST   { background: color-mix(in srgb, var(--green) 15%, transparent);   color: var(--green);   border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+    .method-PUT    { background: color-mix(in srgb, var(--yellow) 15%, transparent);  color: var(--yellow);  border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+    .method-DELETE { background: color-mix(in srgb, var(--red) 15%, transparent);   color: var(--red);     border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+    .method-PATCH  { background: color-mix(in srgb, var(--purple) 15%, transparent); color: var(--purple);  border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; font-family: var(--mono); }
 
     /* Status badges */
-    .status-ok      { background: rgba(63,185,80,.15);  color: var(--green);       border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
-    .status-outdated{ background: rgba(248,81,73,.15);  color: var(--red);         border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
-    .status-unknown { background: rgba(139,148,158,.15);color: var(--text-muted);  border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
+    .status-ok      { background: color-mix(in srgb, var(--green) 15%, transparent);  color: var(--green);       border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
+    .status-outdated{ background: color-mix(in srgb, var(--red) 15%, transparent);  color: var(--red);         border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
+    .status-unknown { background: color-mix(in srgb, var(--text-muted) 15%, transparent);color: var(--text-muted);  border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
 
     /* Severity badges */
-    .sev-critical { background: rgba(248,81,73,.15);   color: var(--red);       border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
-    .sev-high     { background: rgba(240,136,62,.15);  color: var(--orange);    border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
-    .sev-medium   { background: rgba(210,153,34,.15);  color: var(--yellow);    border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
-    .sev-low      { background: rgba(88,166,255,.15);  color: var(--accent);    border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
+    .sev-critical { background: color-mix(in srgb, var(--red) 15%, transparent);   color: var(--red);       border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
+    .sev-high     { background: color-mix(in srgb, var(--orange) 15%, transparent);  color: var(--orange);    border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
+    .sev-medium   { background: color-mix(in srgb, var(--yellow) 15%, transparent);  color: var(--yellow);    border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
+    .sev-low      { background: color-mix(in srgb, var(--accent) 15%, transparent);  color: var(--accent);    border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
 
     /* ===== Details / collapsible ===== */
     details {
@@ -576,7 +623,7 @@
   {% if dash and dash.scores %}
   <div class="score-dashboard">
     <div class="score-overall">
-      <div class="score-overall-badge grade-{{ dash.overall_grade }}" style="border-color:currentColor">
+      <div class="score-overall-badge grade-{{ dash.overall_grade }}" style="border-color:currentColor" data-score="{{ dash.overall }}">
         {{ dash.overall_grade }}
       </div>
       <div class="score-overall-label">Overall<br>Health</div>
