@@ -198,7 +198,10 @@ Plans:
   3. Toggling between light and dark updates all chart axis labels, grid lines, legends, and tooltip backgrounds immediately — with no chart destroy/recreate flicker
   4. The report HTML file loads and renders correctly with no network connection (Chart.js is inlined, no CDN dependency)
   5. The tech debt / health score animates from 0 to its final value on page load; the score hero section displays gradient accents
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 05-01-PLAN.md — Chart.js vendor inlining, FOUC script, color-mix tints, glassmorphism header, score hero glow CSS
+- [ ] 05-02-PLAN.md — Theme toggle button + JS, chart theme bridge, score animation
 
 ### Phase 6: Mobile Responsiveness
 **Goal**: The report layout adapts cleanly at 768px and 480px breakpoints; tab navigation is horizontally scrollable on mobile; all interactive elements meet touch target minimums; charts remain visible and readable at mobile widths.
@@ -226,7 +229,7 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 4. CSS Foundation + Token System | v2.0 | 1/1 | Complete   | 2026-03-29 |
-| 5. Theme Toggle + Chart.js + Visual Polish | v2.0 | 0/TBD | Not started | - |
+| 5. Theme Toggle + Chart.js + Visual Polish | v2.0 | 0/2 | Not started | - |
 | 6. Mobile Responsiveness | v2.0 | 0/TBD | Not started | - |
 | 7. Playwright Validation + Polish | v2.0 | 0/TBD | Not started | - |
 
