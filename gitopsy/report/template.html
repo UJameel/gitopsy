@@ -1653,6 +1653,38 @@
     if (!current) current = 'dark';
     updateToggleButton(current);
   })();
+
+  // ===== Score Animation (VIS-03) =====
+  document.addEventListener('DOMContentLoaded', function() {
+    var el = document.querySelector('.score-overall-badge');
+    if (!el) return;
+    var finalScore = parseInt(el.dataset.score, 10);
+    if (isNaN(finalScore)) return;
+    var finalGrade = el.textContent.trim();
+    var duration = 800;
+    var start = null;
+
+    function scoreToGrade(s) {
+      if (s >= 90) return 'A';
+      if (s >= 80) return 'B';
+      if (s >= 65) return 'C';
+      if (s >= 50) return 'D';
+      return 'F';
+    }
+
+    function easeOut(t) { return 1 - (1 - t) * (1 - t); }
+
+    function frame(ts) {
+      if (!start) start = ts;
+      var progress = Math.min((ts - start) / duration, 1);
+      var easedProgress = easeOut(progress);
+      var currentScore = Math.round(easedProgress * finalScore);
+      el.textContent = progress < 1 ? scoreToGrade(currentScore) : finalGrade;
+      if (progress < 1) requestAnimationFrame(frame);
+    }
+
+    requestAnimationFrame(frame);
+  });
 </script>
 
 </body>
