@@ -6,31 +6,48 @@ import json
 
 from gitopsy.models.schemas import GitopsyReport
 
+# Chart color constants — match CSS token values in template.html :root block
+CHART_GREEN = '#3fb950'
+CHART_GREY = '#8b949e'
+CHART_YELLOW = '#d29922'
+CHART_ORANGE = '#f0883e'
+CHART_RED = '#f85149'
+CHART_AXIS = '#8b949e'
+CHART_GRID = '#30363d'
+CHART_LABEL = '#c9d1d9'
+CHART_GREEN_BRIGHT = '#56d364'
+CHART_PALETTE = [
+    '#58a6ff', CHART_GREEN, CHART_RED,
+    CHART_YELLOW, CHART_ORANGE, '#bc8cff',
+    '#79c0ff', CHART_GREEN_BRIGHT, '#ffa657',
+    '#ff7b72',
+]
+
 
 def _grade_color(score: int) -> str:
     """Return a color string based on score (0=green, 100=red)."""
     if score <= 20:
-        return "#3fb950"  # green
+        return CHART_GREEN
     if score <= 40:
-        return "#8b949e"  # grey-green
+        return CHART_GREY
     if score <= 60:
-        return "#d29922"  # yellow
+        return CHART_YELLOW
     if score <= 80:
-        return "#f0883e"  # orange
-    return "#f85149"  # red
+        return CHART_ORANGE
+    return CHART_RED
 
 
 def _score_color(score: int) -> str:
     """Return color for a 0-100 score where higher is better."""
     if score >= 80:
-        return "#3fb950"  # green
+        return CHART_GREEN
     if score >= 60:
-        return "#8b949e"
+        return CHART_GREY
     if score >= 40:
-        return "#d29922"  # yellow
+        return CHART_YELLOW
     if score >= 20:
-        return "#f0883e"  # orange
-    return "#f85149"  # red
+        return CHART_ORANGE
+    return CHART_RED
 
 
 def debt_bar_chart(report: GitopsyReport) -> str:
@@ -67,19 +84,19 @@ def debt_bar_chart(report: GitopsyReport) -> str:
                 "title": {
                     "display": True,
                     "text": "Tech Debt by Dimension (0=clean, 100=critical)",
-                    "color": "#c9d1d9",
+                    "color": CHART_LABEL,
                 },
             },
             "scales": {
                 "y": {
                     "beginAtZero": True,
                     "max": 100,
-                    "ticks": {"color": "#8b949e"},
-                    "grid": {"color": "#30363d"},
+                    "ticks": {"color": CHART_AXIS},
+                    "grid": {"color": CHART_GRID},
                 },
                 "x": {
-                    "ticks": {"color": "#8b949e"},
-                    "grid": {"color": "#30363d"},
+                    "ticks": {"color": CHART_AXIS},
+                    "grid": {"color": CHART_GRID},
                 },
             },
         },
@@ -104,11 +121,7 @@ def language_doughnut_chart(report: GitopsyReport) -> str:
     labels = [lang for lang, _ in sorted_langs]
     data = [pct for _, pct in sorted_langs]
 
-    palette = [
-        "#58a6ff", "#3fb950", "#f85149", "#d29922", "#f0883e",
-        "#bc8cff", "#79c0ff", "#56d364", "#ffa657", "#ff7b72",
-    ]
-    colors = palette[:len(labels)]
+    colors = CHART_PALETTE[:len(labels)]
 
     config = {
         "type": "doughnut",
@@ -127,12 +140,12 @@ def language_doughnut_chart(report: GitopsyReport) -> str:
             "plugins": {
                 "legend": {
                     "position": "right",
-                    "labels": {"color": "#c9d1d9"},
+                    "labels": {"color": CHART_LABEL},
                 },
                 "title": {
                     "display": True,
                     "text": "Language Breakdown",
-                    "color": "#c9d1d9",
+                    "color": CHART_LABEL,
                 },
             },
         },
