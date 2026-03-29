@@ -168,7 +168,7 @@
 ## Phases
 
 - [x] **Phase 4: CSS Foundation + Token System** — Extract all hardcoded colors into CSS custom properties; define light and dark theme token blocks; establish the prerequisite layer for all v2.0 work (completed 2026-03-29)
-- [ ] **Phase 5: Theme Toggle + Chart.js + Visual Polish** — Wire the user-facing theme toggle; inline Chart.js; implement animated score counter; add glassmorphism header and gradient accents
+- [x] **Phase 5: Theme Toggle + Chart.js + Visual Polish** — Wire the user-facing theme toggle; inline Chart.js; implement animated score counter; add glassmorphism header and gradient accents (completed 2026-03-29)
 - [ ] **Phase 6: Mobile Responsiveness** — Adapt the report layout to tablet and mobile breakpoints; make tabs horizontally scrollable; ensure touch-friendly targets and readable charts at all screen sizes
 - [ ] **Phase 7: Playwright Validation + Polish** — Run four-state Playwright screenshot matrix; verify FOUC prevention; document visual validation workflow for future UI iteration
 
@@ -198,10 +198,10 @@ Plans:
   3. Toggling between light and dark updates all chart axis labels, grid lines, legends, and tooltip backgrounds immediately — with no chart destroy/recreate flicker
   4. The report HTML file loads and renders correctly with no network connection (Chart.js is inlined, no CDN dependency)
   5. The tech debt / health score animates from 0 to its final value on page load; the score hero section displays gradient accents
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [x] 05-01-PLAN.md — Chart.js vendor inlining, FOUC script, color-mix tints, glassmorphism header, score hero glow CSS
-- [ ] 05-02-PLAN.md — Theme toggle button + JS, chart theme bridge, score animation
+- [x] 05-02-PLAN.md — Theme toggle button + JS, chart theme bridge, score animation
 
 ### Phase 6: Mobile Responsiveness
 **Goal**: The report layout adapts cleanly at 768px and 480px breakpoints; tab navigation is horizontally scrollable on mobile; all interactive elements meet touch target minimums; charts remain visible and readable at mobile widths.
@@ -229,7 +229,7 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 4. CSS Foundation + Token System | v2.0 | 1/1 | Complete   | 2026-03-29 |
-| 5. Theme Toggle + Chart.js + Visual Polish | v2.0 | 1/2 | In Progress|  |
+| 5. Theme Toggle + Chart.js + Visual Polish | v2.0 | 2/2 | Complete   | 2026-03-29 |
 | 6. Mobile Responsiveness | v2.0 | 0/TBD | Not started | - |
 | 7. Playwright Validation + Polish | v2.0 | 0/TBD | Not started | - |
 

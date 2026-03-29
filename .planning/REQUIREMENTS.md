@@ -10,16 +10,16 @@
 ### Theme System
 
 - [x] **THEME-01**: User sees no flash of wrong theme on page load (FOUC prevention via inline `<head>` script)
-- [ ] **THEME-02**: User can toggle between light, dark, and system-default modes via a header button
+- [x] **THEME-02**: User can toggle between light, dark, and system-default modes via a header button
 - [x] **THEME-03**: Report auto-detects and applies the OS color scheme preference on first load
-- [ ] **THEME-04**: User's theme preference persists across page reloads (localStorage with file:// graceful fallback)
+- [x] **THEME-04**: User's theme preference persists across page reloads (localStorage with file:// graceful fallback)
 - [x] **THEME-05**: All theme switching achieved via CSS custom property token system — no inline style overrides
 
 ### Visual Design
 
 - [x] **VIS-01**: Report uses a full token-based design system (typography, spacing, color, shadow, radius)
 - [x] **VIS-02**: Header is sticky with glassmorphism effect (`backdrop-filter: blur`) in both light and dark themes
-- [ ] **VIS-03**: Tech debt / health score animates from 0 to final value on page load (`requestAnimationFrame`)
+- [x] **VIS-03**: Tech debt / health score animates from 0 to final value on page load (`requestAnimationFrame`)
 - [x] **VIS-04**: Score/grade hero section uses gradient accents for visual depth
 - [x] **VIS-05**: Light theme palette is WCAG AA compliant (4.5:1 contrast minimum for normal text)
 - [x] **VIS-06**: Dark theme uses layered surface depths — not flat black backgrounds
@@ -35,8 +35,8 @@
 ### Chart.js Integration
 
 - [x] **CHART-01**: Chart.js is inlined into the HTML report (removes CDN dependency, enables true offline use)
-- [ ] **CHART-02**: All chart chrome colors (axes, grid lines, labels, tooltips) update on theme switch
-- [ ] **CHART-03**: Theme switch causes no chart flicker or full re-render (uses `chart.update('none')`)
+- [x] **CHART-02**: All chart chrome colors (axes, grid lines, labels, tooltips) update on theme switch
+- [x] **CHART-03**: Theme switch causes no chart flicker or full re-render (uses `chart.update('none')`)
 
 ### Playwright Validation
 
@@ -72,13 +72,13 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | THEME-01 | Phase 5 | Complete |
-| THEME-02 | Phase 5 | Pending |
+| THEME-02 | Phase 5 | Complete |
 | THEME-03 | Phase 5 | Complete |
-| THEME-04 | Phase 5 | Pending |
+| THEME-04 | Phase 5 | Complete |
 | THEME-05 | Phase 4 | Complete |
 | VIS-01 | Phase 4 | Complete |
 | VIS-02 | Phase 5 | Complete |
-| VIS-03 | Phase 5 | Pending |
+| VIS-03 | Phase 5 | Complete |
 | VIS-04 | Phase 5 | Complete |
 | VIS-05 | Phase 4 | Complete |
 | VIS-06 | Phase 4 | Complete |
@@ -88,8 +88,8 @@
 | MOBL-04 | Phase 6 | Pending |
 | MOBL-05 | Phase 6 | Pending |
 | CHART-01 | Phase 5 | Complete |
-| CHART-02 | Phase 5 | Pending |
-| CHART-03 | Phase 5 | Pending |
+| CHART-02 | Phase 5 | Complete |
+| CHART-03 | Phase 5 | Complete |
 | VAL-01 | Phase 7 | Pending |
 | VAL-02 | Phase 7 | Pending |
 | VAL-03 | Phase 7 | Pending |
