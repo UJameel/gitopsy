@@ -150,6 +150,30 @@
       flex-wrap: wrap;
     }
 
+    .theme-toggle {
+      width: 32px;
+      height: 32px;
+      padding: 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s, background 0.15s;
+    }
+    .theme-toggle:hover {
+      color: var(--text);
+    }
+    .theme-toggle:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
     .badge {
       display: inline-flex;
       align-items: center;
@@ -612,6 +636,7 @@
     <div class="badge">{{ report.architecture.framework }}</div>
     {% endif %}
     {% endif %}
+    <button class="theme-toggle" id="themeToggle" title="Switch to Light mode" aria-label="Switch to Light mode" onclick="toggleTheme()">&#x1F319;</button>
   </div>
 </header>
 
@@ -1528,19 +1553,106 @@
     });
   }
 
-  // ===== Charts =====
-  Chart.defaults.color = '#8b949e';
-  Chart.defaults.borderColor = '#30363d';
+  // ===== Chart Theme Bridge =====
+  function getThemeColors() {
+    var styles = getComputedStyle(document.documentElement);
+    return {
+      textMuted: styles.getPropertyValue('--text-muted').trim(),
+      border: styles.getPropertyValue('--border').trim(),
+      surface2: styles.getPropertyValue('--surface2').trim(),
+      text: styles.getPropertyValue('--text').trim()
+    };
+  }
 
-  const langCfg = {{ lang_chart_json | safe }};
+  function applyChartTheme() {
+    var c = getThemeColors();
+    Chart.defaults.color = c.textMuted;
+    Chart.defaults.borderColor = c.border;
+    [window.langChart, window.debtChart].forEach(function(chart) {
+      if (!chart) return;
+      chart.options.plugins.tooltip = chart.options.plugins.tooltip || {};
+      chart.options.plugins.tooltip.backgroundColor = c.surface2;
+      chart.options.plugins.tooltip.bodyColor = c.text;
+      chart.update('none');
+    });
+  }
+
+  // ===== Chart Init =====
+  var initColors = getThemeColors();
+  Chart.defaults.color = initColors.textMuted;
+  Chart.defaults.borderColor = initColors.border;
+
+  var langCfg = {{ lang_chart_json | safe }};
   if (langCfg && langCfg.type) {
-    new Chart(document.getElementById('langChart'), langCfg);
+    langCfg.options = langCfg.options || {};
+    langCfg.options.plugins = langCfg.options.plugins || {};
+    langCfg.options.plugins.tooltip = { backgroundColor: initColors.surface2, bodyColor: initColors.text };
+    window.langChart = new Chart(document.getElementById('langChart'), langCfg);
   }
 
-  const debtCfg = {{ debt_chart_json | safe }};
+  var debtCfg = {{ debt_chart_json | safe }};
   if (debtCfg && debtCfg.type) {
-    new Chart(document.getElementById('debtChart'), debtCfg);
+    debtCfg.options = debtCfg.options || {};
+    debtCfg.options.plugins = debtCfg.options.plugins || {};
+    debtCfg.options.plugins.tooltip = { backgroundColor: initColors.surface2, bodyColor: initColors.text };
+    window.debtChart = new Chart(document.getElementById('debtChart'), debtCfg);
   }
+
+  // ===== Theme Toggle =====
+  var THEME_STATES = [
+    { key: 'dark',   icon: '\u{1F319}', next: 'Switch to Light mode' },
+    { key: 'light',  icon: '\u2600',    next: 'Switch to System mode' },
+    { key: 'system', icon: '\u{1F5A5}', next: 'Switch to Dark mode' }
+  ];
+
+  function resolveTheme(key) {
+    if (key === 'light') return 'light';
+    if (key === 'dark') return null;  // null = remove attribute = dark default
+    // system: detect OS preference
+    try {
+      if (window.matchMedia('(prefers-color-scheme: light)').matches) return 'light';
+    } catch(e) {}
+    return null;
+  }
+
+  function applyTheme(key) {
+    var resolved = resolveTheme(key);
+    if (resolved === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+  }
+
+  function updateToggleButton(key) {
+    var btn = document.getElementById('themeToggle');
+    if (!btn) return;
+    var idx = THEME_STATES.findIndex(function(s) { return s.key === key; });
+    if (idx === -1) idx = 0;
+    btn.textContent = THEME_STATES[idx].icon;
+    btn.title = THEME_STATES[idx].next;
+    btn.setAttribute('aria-label', THEME_STATES[idx].next);
+  }
+
+  function toggleTheme() {
+    var current;
+    try { current = localStorage.getItem('gitopsy-theme') || 'dark'; } catch(e) { current = 'dark'; }
+    var idx = THEME_STATES.findIndex(function(s) { return s.key === current; });
+    var nextIdx = (idx + 1) % THEME_STATES.length;
+    var nextKey = THEME_STATES[nextIdx].key;
+    try { localStorage.setItem('gitopsy-theme', nextKey); } catch(e) {}
+    applyTheme(nextKey);
+    updateToggleButton(nextKey);
+    applyChartTheme();
+  }
+
+  // Initialize toggle button state on load
+  (function() {
+    var current;
+    try { current = localStorage.getItem('gitopsy-theme'); } catch(e) { current = null; }
+    if (!current) current = 'dark';
+    updateToggleButton(current);
+  })();
 </script>
 
 </body>
