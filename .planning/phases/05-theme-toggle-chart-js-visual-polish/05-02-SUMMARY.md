@@ -70,8 +70,7 @@ Each task was committed atomically:
 
 1. **Task 1: Theme toggle button, chart theme bridge, refactored chart init** - `c4b125e` (feat)
 2. **Task 2: Score counter animation with grade letter cycling** - `5235340` (feat)
-
-**Plan metadata:** (to be added after final docs commit)
+3. **Task 3 (post-UAT fixes): chart tooltip proxy bug and mobile table overflow** - `1cd70a6` (fix)
 
 ## Files Created/Modified
 - `gitopsy/report/template.html` - Added `.theme-toggle` CSS, toggle button HTML in `.header-right`, `getThemeColors()`/`applyChartTheme()` functions, refactored chart init to globals, `toggleTheme()` with localStorage, `updateToggleButton()` IIFE init, score counter DOMContentLoaded listener
@@ -87,14 +86,17 @@ None - plan executed exactly as written.
 
 ## Issues Encountered
 - `python -m gitopsy . --output /tmp/gitopsy-test.html` syntax was incorrect (options must precede path argument per CLI structure). Used `python3 -m gitopsy --output /tmp/gitopsy-test.html .` to generate test report successfully.
+- Post-UAT Playwright validation found two bugs fixed in `1cd70a6`:
+  - CHART-03: `chart.options.plugins.tooltip` writes through reactive proxy in Chart.js 4.4.0 causing silent stack overflow. Fixed by using `chart.config.options.plugins.tooltip` instead.
+  - Mobile overflow: at 375px viewport, body overflowed 46px horizontally. Fixed by adding `overflow-x: hidden` to `body`.
 
 ## User Setup Required
 None - no external service configuration required.
 
 ## Next Phase Readiness
 - Theme toggle, chart reactivity, and score animation complete — all Phase 5 interactive features implemented
-- Awaiting human verification (Task 3 checkpoint) to confirm visual correctness
-- Phase 6 (Mobile Responsiveness) can begin after verification
+- Post-UAT bugs resolved: chart tooltip proxy fixed, mobile overflow fixed
+- Phase 6 (Mobile Responsiveness) can begin
 - No blockers or concerns
 
 ---

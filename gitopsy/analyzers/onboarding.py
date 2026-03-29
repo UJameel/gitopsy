@@ -52,12 +52,25 @@ def _parse_readme_summary(content: str) -> str:
                 paragraphs.append(" ".join(current))
                 current = []
         else:
-            # Skip code blocks, badges, etc.
+            # Skip code blocks, image lines, table rows, and badge/link-only lines
             if stripped.startswith("```") or stripped.startswith("!["):
                 continue
             if stripped.startswith("|"):
                 continue
-            current.append(stripped)
+            # Skip badge lines like [![alt](img)](url) and pure link lines [text](url)
+            if re.match(r'^\[!?\[', stripped) or re.match(r'^\[.*\]\(.*\)\s*$', stripped):
+                continue
+            # Strip blockquote marker, keep the text
+            if stripped.startswith(">"):
+                stripped = stripped[1:].strip()
+                if not stripped:
+                    continue
+            # Strip inline markdown links [text](url) → text
+            stripped = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', stripped)
+            # Strip bold/italic markers
+            stripped = re.sub(r'\*{1,2}([^*]+)\*{1,2}', r'\1', stripped)
+            if stripped:
+                current.append(stripped)
 
     if current:
         paragraphs.append(" ".join(current))

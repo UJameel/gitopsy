@@ -236,10 +236,10 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 120%;
-      height: 120%;
+      width: 180%;
+      height: 180%;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(63, 185, 80, 0.15) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(63, 185, 80, 0.30) 0%, transparent 65%);
       z-index: -1;
       pointer-events: none;
     }
@@ -1630,7 +1630,10 @@
     if (!btn) return;
     var idx = THEME_STATES.findIndex(function(s) { return s.key === key; });
     if (idx === -1) idx = 0;
-    btn.textContent = THEME_STATES[idx].icon;
+    // Show resolved visual state: moon when page is dark, sun when page is light.
+    // This prevents the confusing monitor icon when system preference is dark.
+    var resolved = resolveTheme(key);
+    btn.textContent = resolved === 'light' ? '\u2600\uFE0F' : '\uD83C\uDF19';
     btn.title = THEME_STATES[idx].next;
     btn.setAttribute('aria-label', THEME_STATES[idx].next);
   }
