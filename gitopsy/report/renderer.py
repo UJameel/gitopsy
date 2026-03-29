@@ -13,6 +13,7 @@ from gitopsy.report.charts import debt_bar_chart, language_doughnut_chart, score
 
 
 _TEMPLATE_DIR = Path(__file__).parent
+_VENDORS_DIR = Path(__file__).parent / "vendors"
 _TEMPLATE_NAME = "template.html"
 
 
@@ -33,12 +34,14 @@ def render(report: GitopsyReport, output_path: str) -> None:
     debt_chart_json = debt_bar_chart(report)
     score_dashboard_json = score_dashboard_data(report)
     score_dashboard = json.loads(score_dashboard_json)
+    chartjs_source = (_VENDORS_DIR / "chart.umd.min.js").read_text(encoding="utf-8")
 
     html = template.render(
         report=report,
         lang_chart_json=lang_chart_json,
         debt_chart_json=debt_chart_json,
         score_dashboard=score_dashboard,
+        chartjs_source=chartjs_source,
     )
 
     out = Path(output_path)

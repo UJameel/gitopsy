@@ -84,19 +84,12 @@ def debt_bar_chart(report: GitopsyReport) -> str:
                 "title": {
                     "display": True,
                     "text": "Tech Debt by Dimension (0=clean, 100=critical)",
-                    "color": CHART_LABEL,
                 },
             },
             "scales": {
                 "y": {
                     "beginAtZero": True,
                     "max": 100,
-                    "ticks": {"color": CHART_AXIS},
-                    "grid": {"color": CHART_GRID},
-                },
-                "x": {
-                    "ticks": {"color": CHART_AXIS},
-                    "grid": {"color": CHART_GRID},
                 },
             },
         },
@@ -140,12 +133,10 @@ def language_doughnut_chart(report: GitopsyReport) -> str:
             "plugins": {
                 "legend": {
                     "position": "right",
-                    "labels": {"color": CHART_LABEL},
                 },
                 "title": {
                     "display": True,
                     "text": "Language Breakdown",
-                    "color": CHART_LABEL,
                 },
             },
         },
