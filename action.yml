@@ -2,6 +2,10 @@ name: 'Gitopsy — Codebase Intelligence Report'
 description: 'Analyze any repository and produce a beautiful HTML intelligence report'
 author: 'UJameel'
 
+branding:
+  icon: 'search'
+  color: 'purple'
+
 inputs:
   path:
     description: 'Path to the repository to analyze'
